@@ -1,0 +1,71 @@
+stateDiagram-v2
+    [*] --> Idle: System Start
+    
+    Idle --> CheckingContext: User Query
+    
+    CheckingContext --> ContextualReference: reference_prev_locations = True AND last_location exists
+    CheckingContext --> NormalRouting: No contextual reference
+    
+    ContextualReference --> MCPCall: Reuse last_location
+    MCPCall --> ResponseSent: Weather data returned
+    ResponseSent --> Idle: Ready for next query
+    
+    NormalRouting --> AwaitingLocation: awaiting_location = True
+    NormalRouting --> RouteDecision: awaiting_location = False
+    
+    AwaitingLocation --> LocationConfirmation: Force MCP with last_intent
+    
+    LocationConfirmation --> StillAmbiguous: Status = AMBIGUOUS
+    LocationConfirmation --> LocationFound: Status = OK
+    LocationConfirmation --> LocationError: Status = NOT_FOUND
+    
+    StillAmbiguous --> AwaitingLocation: Keep awaiting_location = True, Ask for clarification
+    
+    LocationFound --> ResetState: Set awaiting_location = False, Save location info
+    ResetState --> ResponseSent
+    
+    LocationError --> Idle: Return error message
+    
+    RouteDecision --> RAGRoute: Keywords match RAG
+    RouteDecision --> MCPRoute: Keywords match MCP
+    RouteDecision --> LLMRoute: No specific keywords
+    
+    RAGRoute --> RAGProcess: run_research_agent
+    RAGProcess --> ResponseSent: Return answer
+    RAGProcess --> LLMFallback: Info not available
+    LLMFallback --> ResponseSent
+    
+    MCPRoute --> MCPProcess: run_mcp WEATHER
+    
+    MCPProcess --> AmbiguousLocation: Status = AMBIGUOUS
+    MCPProcess --> WeatherFound: Status = OK
+    MCPProcess --> LocationNotFound: Status = NOT_FOUND
+    
+    AmbiguousLocation --> SetAwaitingState: awaiting_location = True, last_intent = WEATHER
+    SetAwaitingState --> ResponseSent: Ask for confirmation
+    
+    WeatherFound --> ResponseSent: Return weather data
+    LocationNotFound --> ResponseSent: Return error
+    
+    LLMRoute --> DirectLLM: gemini.generate_content
+    DirectLLM --> ResponseSent
+    
+    note right of AwaitingLocation
+        STATE ACTIVE
+        System menunggu
+        konfirmasi lokasi
+        dari user
+    end note
+    
+    note right of ResetState
+        STATE RESET
+        Location confirmed
+        System ready for
+        contextual follow-up
+    end note
+    
+    note right of ContextualReference
+        CONTEXT DETECTED
+        User references
+        previous location
+    end note

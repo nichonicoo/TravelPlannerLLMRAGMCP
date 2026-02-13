@@ -1,0 +1,45 @@
+# Virtual Environment
+venv/
+.env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# VSCode
+.vscode/
+
+# Logs
+*.log
+
+# Environment variables
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Pytest
+.pytest_cache/
+
+# MyPy
+.mypy_cache/
+
+# Coverage
+.coverage
+htmlcov/
+
+# Chroma / vector DB
+chroma/
+*.sqlite3
