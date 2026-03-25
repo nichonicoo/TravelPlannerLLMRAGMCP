@@ -1,4 +1,4 @@
-from LLM.test_lmstudio import local_llm_chat
+from LLM.qwen import chat
 
 def reference_prev_locations(query: str) -> bool:
     messages = f"""
@@ -11,7 +11,7 @@ def reference_prev_locations(query: str) -> bool:
             "{query}"
             """
 
-    answer = local_llm_chat(messages, temperature= 0)
+    answer = chat(messages, temperature= 0)
 
     if not answer:
         return False

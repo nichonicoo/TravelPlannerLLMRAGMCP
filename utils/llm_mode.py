@@ -1,4 +1,4 @@
-from LLM.test_lmstudio import local_llm_chat
+from LLM.qwen import chat
 
 def LLM_answering(query: str) -> str:
     messages = f"""
@@ -19,6 +19,6 @@ def LLM_answering(query: str) -> str:
             Jawaban:
             """
     
-    answer = local_llm_chat(messages, temperature= 0)
+    answer = chat(messages, temperature= 0)
 
     return answer

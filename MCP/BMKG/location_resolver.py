@@ -1,15 +1,15 @@
 from difflib import get_close_matches
 import pandas as pd 
-import re
+import re, os
 
-path = '/Users/nicholasterrencesalim/source tree/lang-project/data/kode-wilayah.csv'
+# path = '/Users/nicholasterrencesalim/source tree/lang-project/data/kode-wilayah.csv'
+path = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'kode-wilayah.csv')
 
 df = pd.read_csv(path)
 
 # ADM4 = kode yang punya 3 titik (contoh: 11.01.01.2001)
 df["dot_count"] = df["kode"].astype(str).str.count(r"\.")
 ADM4_DF = df[df["dot_count"] == 3].copy()
-
 
 # bikin kolom lowercase untuk matching
 ADM4_DF["nama_lower"] = ADM4_DF["nama"].str.lower()
@@ -19,6 +19,8 @@ ADM4_NAME_INDEX = {
     row["nama_lower"]: row["kode"]
     for _, row in ADM4_DF.iterrows()
 }
+
+print(ADM4_NAME_INDEX)
 
 # ADM4_LOOKUP = {
 #     "yogyakarta": "34.71.01.1001",
@@ -37,7 +39,7 @@ def extract_location(text: str) -> str:
 
     stopwords = [
         "bagaimana", "cuaca", "di", "ke", "kota",
-        "hari", "ini", "gimana", "sekarang"
+        "hari", "ini", "gimana", "sekarang", "itu", "ada", "apa", "ya"
     ]
     
     filtered = [w for w in words if w not in stopwords]
@@ -53,7 +55,7 @@ def normalize(text: str) -> str :
     text = text.replace("kota", "")
     return text.strip()
 
-def getLocation(query: str):
+def getLocation(query: str, force: bool = False) -> dict:
     # print('query: ', query)
     if isinstance(query, list):
         query = query[0] if query else ""
@@ -63,14 +65,17 @@ def getLocation(query: str):
     
     q = query.lower().strip()
     
-    locations = extract_location(query)
+    # locations = extract_location(query)
+    locations = query.lower().strip() if force else extract_location(query)
+    print(f"[LocationResolver] extracted: '{locations}' (force={force})")
     
     print('loc: ', locations)
     
     if locations in ADM4_NAME_INDEX:
         return {
             "status": "FOUND",
-            "adm4": ADM4_NAME_INDEX[locations]
+            "adm4": ADM4_NAME_INDEX[locations],
+            "location_name": locations.title(),
         }
     
     #for partial match
@@ -79,11 +84,12 @@ def getLocation(query: str):
         if locations in name
     ]
     
-    # if len(candidates) == 1:
-    #     return {
-    #         'status': "FOUND",
-    #         'adm4': ADM4_NAME_INDEX[candidates[0]]
-    #     }
+    if len(candidates) == 1:
+        return {
+            'status': "FOUND",
+            'adm4': ADM4_NAME_INDEX[candidates[0]],
+            "location_name": matches[0].title()
+        }
     
     matches = get_close_matches(locations, ADM4_NAME_INDEX.keys(), n=1, cutoff=0.6)
     
@@ -92,8 +98,10 @@ def getLocation(query: str):
     if matches:
         return {
             "status": "FOUND",
-            "adm4": ADM4_NAME_INDEX[matches[0]]
+            "adm4": ADM4_NAME_INDEX[matches[0]],
+            "location_name": matches[0].title()
         }
+        
     
     if len(candidates) > 1:
         return {

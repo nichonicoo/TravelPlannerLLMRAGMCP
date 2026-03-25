@@ -1,4 +1,4 @@
-from LLM.test_lmstudio import local_llm_chat
+from LLM.qwen import chat
 
 def decision_routing(query: str) -> str:
     messages = f"""
@@ -13,7 +13,7 @@ def decision_routing(query: str) -> str:
             {query}
             """
 
-    answer = local_llm_chat(messages, temperature= 0)
+    answer = chat(messages, temperature= 0)
 
     if not answer:
         return "LLM"
