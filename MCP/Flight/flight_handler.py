@@ -2,15 +2,8 @@
 from MCP.Flight.flight_param_extractor import extract_flight_param, missing_params
 from MCP.Flight.flight_search import search_flight_offers
 from MCP.Flight.flight_beautifier import beautify_flight_offerst
-
-"""
-Flight Handler
-Responsible for orchestrating flight search flow:
-- search flights
-- format options
-- return structured response for LLM
-"""
-
+from LLM.orchestrator import extract_city, city_to_iata
+# yang lalu 1
 def flight_handler(query: str, session: dict = None, force_params: dict = None) -> dict: 
     """
     Main entry point flight MCP.
@@ -32,7 +25,8 @@ def flight_handler(query: str, session: dict = None, force_params: dict = None) 
         }
     """
     # extract the params
-    params = force_params or extract_flight_param(query, session)
+    params = extract_flight_param(query, session)
+    print("params: ", params)
     
     if not params: 
         return {
@@ -43,14 +37,79 @@ def flight_handler(query: str, session: dict = None, force_params: dict = None) 
             "params": {},
         }
     
+    
+    # check if there's mutiple origin or destination IATAS
+    
+    print('extract city now - 3 ')
+    city = extract_city(query)
+    print('city extracted: ', city)
+    
+    if city:
+        iata = city_to_iata(city)
+        origin_list = iata.get('origin_iatas', [])
+        destination_list = iata.get('destination_iatas', [])
+        
+        if origin_list:
+            params["departure_id"] = origin_list if len(origin_list) > 1 else origin_list[0]
+
+        if destination_list:
+            params["arrival_id"] = destination_list if len(destination_list) > 1 else destination_list[0]
+            
+        if isinstance(params["departure_id"], list) or isinstance(params["arrival_id"], list):
+
+            candidates = []
+
+            if isinstance(params["departure_id"], list):
+                candidates = params["departure_id"]
+
+            elif isinstance(params["arrival_id"], list):
+                candidates = params["arrival_id"]
+
+            print('city to iata extracted: ', candidates)
+
+            return {
+                "status": "AMBIGOUS",
+                "message": "Menemukan beberapa pilihan bandara. Pilih salah satu:",
+                "candidates": candidates,
+                "params": params,
+            }
+        
+        # candidates = []
+        # if len(origin_list) > 1:
+        #     candidates = origin_list
+        # elif len(destination_list) > 1:
+        #     candidates = destination_list
+            
+        # print('city to iata extracted: ', candidates)
+        # print(f"[Session] Kota diekstrak dari LLM turn: {city} ({iata})")
+        
+        # return {
+        #     "status": "AMBIGOUS",
+        #     "message": "Menemukan beberapa pilihan bandara. Pilih salah satu:",
+        #     "candidates": candidates,   # 🔧 FIX
+        #     "params": params,           # tetap simpan params lama
+        # }
+        
+
+        # if len(origin_list) > 1 or len(destination_list) > 1: 
+        #     return {
+        #     "status": "AMBIGOUS",
+        #     "message": "Menemukan beberapa IATA CODE lebih dari 1  "
+        #                "Mohon sebutkan yang lebih spesifik",
+        #     "missing": ["origin", "destination", "departure_date"],
+        #     "params": iata,
+        # } 
+        # print('city to iata extracted: ', candidates)
+        # print(f"[Session] Kota diekstrak dari LLM turn: {city} ({iata})")
+    
     # check if params is lengkap 
     missing = missing_params(params)
     
     if missing: 
         missing_labels = {
-            "origin": "kota asal",
-            "destination": "kota tujuan",
-            "departure_date": "tanggal keberangkatan",
+            "departure_id": "kota asal",
+            "arrival_id": "kota tujuan",
+            "outbound_date": "tanggal keberangkatan",
         }
         missing_str = ", ".join(missing_labels.get(m, m) for m in missing)
         return {
@@ -62,14 +121,19 @@ def flight_handler(query: str, session: dict = None, force_params: dict = None) 
     print(f"[Flight Handler] Params: {params}")
     
     result = search_flight_offers(
-        origin=params["origin"],
-        destination=params["destination"],
-        departure_date=params["departure_date"],
+        origin=params.get("departure_id"),
+        destination=params.get("arrival_id"),
+        type = params.get("type"),
+        departure_date=params.get("outbound_date"),
         return_date=params.get("return_date"),
         adults=params.get("adults", 1),
+        children = params.get("children", None),
+        infants_in_seat = params.get("infants_in_seat", None),
+        infants_on_lap = params.get("infants_on_lap", None),
         travel_class=params.get("travel_class", "ECONOMY"),
-        currency=params.get("currencyCode")
+        currency=params.get("currency")
     )
+    print('results: ', result)
     
     if result["status"] != "OK":
         return {
@@ -87,6 +151,9 @@ def flight_handler(query: str, session: dict = None, force_params: dict = None) 
         "raw_offers": result.get("raw", []),   # disimpan untuk price check nanti
     }
 
+
+
+# was 
 # def format_duration(duration: str) -> str:
 #     """
 #     Convert PT1H45M -> 1H45M

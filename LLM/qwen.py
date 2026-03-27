@@ -43,7 +43,7 @@ def chat(messages: str | list, temperature: float =0 ) -> str | None:
         }
     
     try: 
-        r = requests.post(LM_STUDIO_URL, json=payload, timeout=50)
+        r = requests.post(LM_STUDIO_URL, json=payload, timeout=200)
         r.raise_for_status()
         data = r.json()
         

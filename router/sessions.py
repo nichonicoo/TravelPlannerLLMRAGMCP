@@ -14,18 +14,24 @@ NON_TRAVEL_TOPICS = [
 SESSION = {
     # Lokasi
     "last_city_name": None,      # ex: "Malang"
+    "last_city_destination_name": None,
     "last_city_iata": None,      # ex: "MLG"
+    "last_city_destination_iata": None,
     "last_adm4": None,           # ex: "35.73.01.1001"
+    "last_city_destination_adm4": None,
     "city_turn_counter": 0,      # berapa turn sejak kota terakhir disebut
 
     # Flight
     "last_origin": None,         # ex: "CGK" (Jakarta)
+    "last_destination": None,
     "last_flight_params": None,  # dict hasil ekstrak Amadeus
 
     # Confirmation state
     "awaiting_confirmation": False,
     "pending_intent": None,
     "candidates": [],
+    "pending_query": None, 
+    "pending_params": None,
 
     # Turn tracking
     "total_turns": 0,
@@ -47,18 +53,39 @@ def tick():
             print(f"[Session] Konteks kota '{SESSION['last_city_name']}' expired setelah {EXPIRE_AFTER_N_TURNS} turn.")
             _reset_city()
 
-def update_city(cityname: str, adm4: str = None, iata: str = None):
+def update_city(cityname: dict | str, adm4: str = None, iata: dict = None):
     """update city context. and incremet counter """
+    if isinstance(cityname, str):
+        current_origin = cityname
+        current_dest = None
+    else:
+        # Jika dictionary, ambil pakai .get()
+        current_origin = cityname.get('origin')
+        current_dest = cityname.get('destination')
+        
     old = SESSION["last_city_name"]
-    SESSION["last_city_name"] = cityname
+    SESSION["last_city_name"] = current_origin
+    SESSION["last_city_destination_name"] = current_dest
     SESSION["last_adm4"] = adm4
-    SESSION["last_city_iata"] = iata
+    # SESSION["last_city_iata"] = iata.get('origin_iatas')
+    # SESSION["last_destination"] = iata.get('destination_iatas')
+    if iata and isinstance(iata, dict):
+        SESSION["last_city_iata"] = iata.get('origin_iatas')
+        SESSION["last_destination"] = iata.get('destination_iatas')
+    else:
+        SESSION["last_city_iata"] = None
+        SESSION["last_destination"] = None
     SESSION["city_turn_counter"] = 0  # reset karena baru disebut
     
-    if old and old.lower() != cityname.lower():
-        print(f"[Session] kota berubah menjadi: {old} -> {cityname}")
+    if old and current_origin and old.lower() != current_origin.lower():
+        print(f"[Session] kota berubah: {old} -> {current_origin}")
     else:
-        print(f"[Session] Kota tersimpan: {cityname}")
+        print(f"[Session] Kota tersimpan: {current_origin}")
+    
+    # if old and old.lower() != cityname.lower():
+    #     print(f"[Session] kota berubah menjadi: {old} -> {cityname}")
+    # else:
+    #     print(f"[Session] Kota tersimpan: {cityname}")
 
 def update_flight(params: dict):
     SESSION["last_flight_params"] = params
@@ -105,11 +132,15 @@ def summary() -> str:
     """Debug print state SESSION."""
     return (
         f"city={SESSION['last_city_name']} "
+        f"last city destination name ={SESSION['last_city_destination_name']} "
         f"(turn_counter={SESSION['city_turn_counter']}) | "
         f"adm4={SESSION['last_adm4']} | "
+        f"last_city_destination_adm4={SESSION['last_city_destination_adm4']} | "
         f"iata={SESSION['last_city_iata']} | "
         f"origin={SESSION['last_origin']} | "
-        f"awaiting={SESSION['awaiting_confirmation']}"
+        f"last_destination={SESSION['last_destination']} |"
+        f"awaiting={SESSION['awaiting_confirmation']} | "
+        f"last_destination={SESSION['last_destination']}"
     )
     
 # important function
@@ -126,3 +157,4 @@ def _reset_all():
     SESSION["awaiting_confirmation"] = False
     SESSION["pending_intent"] = None
     SESSION["candidates"] = []
+

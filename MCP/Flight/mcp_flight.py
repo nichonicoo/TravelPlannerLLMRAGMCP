@@ -10,10 +10,10 @@ _cache = {
 }
 amadeus_auth_link = 'https://test.api.amadeus.com/v1/security/oauth2/token'
 
-# amadeus = Client(
-#     client_id = os.getenv("AMADEUS_CLIENT_ID"),
-#     client_secret = os.getenv("AMADEUS_CLIENT_KEY")
-# )
+amadeus = Client(
+    client_id = os.getenv("AMADEUS_CLIENT_ID"),
+    client_secret = os.getenv("AMADEUS_CLIENT_KEY")
+)
 
 # to get token 
 def get_token() -> str | None:
@@ -71,12 +71,12 @@ def search_flight_offers(
             "originLocationCode": origin,
             "destinationLocationCode": destination,
             "departureDate": departure_date,
-            "returnDate": return_date,
+            # "returnDate": return_date,
             "adults": adults, 
-            "currencyCode": currency,
+            # "currencyCode": currency,
             "max": 5
         }
-        # print('params: ', params)
+        print('params: ', params)
         if return_date:
             params["returnDate"] = return_date
             
@@ -160,43 +160,43 @@ if __name__ == "__main__":
     
     get_token()
 
-    # offers = search_flight_offers(
-    #     origin="CGK",
-    #     destination="SIN",
-    #     departure_date="2026-03-06",
-    #     return_date="2026-03-20",
-    #     adults= 1,
-    #     currency= "USD"
-    # )
+    offers = search_flight_offers(
+        origin="CGK",
+        destination="MLG",
+        departure_date="2026-03-26",
+        return_date="2026-03-28",
+        adults= 1,
+        currency= "IDR"
+    )
     
-    # print('acc token:', amadeus.access_token.access_token)
+    print('acc token:', amadeus.access_token.access_token)
 
-    # if offers: 
-    #     print('offers: ')
-    #     print(offers)
-    #     print("==========================")
-    #     for idx, offer in enumerate(offers, start=1):
+    if offers: 
+        print('offers: ')
+        print(offers)
+        print("==========================")
+        for idx, offer in enumerate(offers, start=1):
 
-    #         # clean_payload = scrub_offer_for_pricing(offer)
+            # clean_payload = scrub_offer_for_pricing(offer)
 
-    #         go = offer["itineraries"][0]["segments"][0]
-    #         ret = offer["itineraries"][1]["segments"][0]
+            go = offer["itineraries"][0]["segments"][0]
+            ret = offer["itineraries"][1]["segments"][0]
 
-    #         print(f"\n===== OPTION {idx} =====")
+            print(f"\n===== OPTION {idx} =====")
 
-    #         print("ID:", offer["id"])
-    #         print("Price:", offer["price"]["total"], offer["price"]["currency"])
-    #         print("Seats:", offer["numberOfBookableSeats"])
+            print("ID:", offer["id"])
+            print("Price:", offer["price"]["total"], offer["price"]["currency"])
+            print("Seats:", offer["numberOfBookableSeats"])
 
-    #         print("\nGO:")
-    #         print("Flight:", go["number"])
-    #         print("Depart:", go["departure"]["at"])
-    #         print("Arrive:", go["arrival"]["at"])
+            print("\nGO:")
+            print("Flight:", go["number"])
+            print("Depart:", go["departure"]["at"])
+            print("Arrive:", go["arrival"]["at"])
 
-    #         print("\nRETURN:")
-    #         print("Flight:", ret["number"])
-    #         print("Depart:", ret["departure"]["at"])
-    #         print("Arrive:", ret["arrival"]["at"])
+            print("\nRETURN:")
+            print("Flight:", ret["number"])
+            print("Depart:", ret["departure"]["at"])
+            print("Arrive:", ret["arrival"]["at"])
             
     #     # disini lanjut LLM, tergantung user mau pilih jam berapa gitu ya 
         

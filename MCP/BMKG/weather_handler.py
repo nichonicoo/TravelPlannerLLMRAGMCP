@@ -30,7 +30,7 @@ def weather_handler(query: str, force_context: bool = False):
     #     return return_weather_beautifier(weather_data)
 
     # Step 1: Resolve location
-    resolution = getLocation(query  , force_context)
+    resolution = getLocation(query  , force= force_context)
     status = resolution.get("status")
     
     # ---------------- AMBIGUOUS ----------------
@@ -38,7 +38,8 @@ def weather_handler(query: str, force_context: bool = False):
         return {
             "status": "AMBIGUOUS",
             "intent": "WEATHER",
-            "candidates": resolution.get("candidates", [])
+            "candidates": resolution.get("candidates", []),
+            "original_query": query
         }
 
     # ---------------- NOT FOUND ----------------
@@ -70,7 +71,8 @@ def weather_handler(query: str, force_context: bool = False):
         "status": "OK",
         "adm4": adm4,
         "location_name": location_name,
-        "data": return_weather_beautifier(weather_data)
+        "data": return_weather_beautifier(weather_data),
+        "original_query": query
         }
 
     # ---------------- FALLBACK ----------------

@@ -2,13 +2,14 @@ import router.sessions as session
 from LLM.orchestrator import decision_routing, reference_prev_locations, city_to_iata
 from LLM.llm_mode import llm_answering
 from MCP.mcp_mock import run_mcp
-from LLM.orchestrator import city_to_iata
+from LLM.orchestrator import city_to_iata, extract_city, get_airport_full_name
 try: 
     from RAG.research_agent import run_research_agent
     RAG_AVAILABLE = True
 except ImportError:
     RAG_AVAILABLE = False
     
+# was 1    
 def handle_weather_result(result: dict) -> str: 
     status = result.get("status")
     
@@ -22,7 +23,13 @@ def handle_weather_result(result: dict) -> str:
     
     if status == "AMBIGUOUS":
         session.set_confirmation("WEATHER", result.get("candidates", []))
-        candidates_str = "\n- ".join(session.get()["candidates"])
+        
+        # new
+        session.get()["pending_query"] = result.get("original_query")
+        candidates = result.get("candidates", [])
+        candidates_str = "\n".join([f"{i+1}. {c}" for i, c in enumerate(candidates)]) 
+        
+        # candidates_str = "\n- ".join(session.get()["candidates"])
         return f"Lokasi tidak dikenali secara pasti. Maksudnya yang mana?\n- {candidates_str}"
     
     if status == "NOT_FOUND":
@@ -42,6 +49,27 @@ def handle_flight_result(result: dict) -> str:
         session.set_confirmation("FLIGHT", [])
         return result["message"]
     
+    if status == "AMBIGOUS":
+        session.set_confirmation("FLIGHT", result.get("candidates", []))
+        session.get()["pending_params"] = result.get("params")
+        
+        candidates = result.get("candidates", [])
+        
+        # candidates_str = "\n".join([f"{i+1}. {c}" for i, c in enumerate(candidates)])
+        candidates_str = "\n".join([
+            f"{i+1}. {get_airport_full_name(c)}"
+            for i, c in enumerate(candidates)
+        ])
+    
+        return f"Bandara tidak spesifik. Pilih salah satu:\n{candidates_str}"
+        
+        # new 
+        # session.get()["pending_params"] = result.get("params")
+        # candidates_str = "\n- ".join(session.get()["candidates"])
+        
+        # # candidates_str = "\n- ".join(session.get()["candidates"])
+        # return f"Lokasi tidak dikenali secara pasti. Maksudnya yang mana?\n- {candidates_str}"
+    
     if status == "NOT_FOUND":
         return "Tidak ada penerbangan tersedia untuk rute dan tanggal tersebut."
  
@@ -59,19 +87,84 @@ def langchain_router(query: str, retriever = None, gemini = None) -> str:
         print(f"[Router] Confirmation mode → intent: {intent}")
         
         if intent == "WEATHER":
-            result = run_mcp(query=query, intent="WEATHER", force_context=True)
+            # new 
+            choice = query.strip()
+            candidates = s["candidates"]
+            
+            selected = None
+            
+            if choice.isdigit():
+                idx = int(choice) - 1
+                if 0 <= idx < len(candidates):
+                    selected = candidates[idx]
+            else:
+                selected = choice
+            
+            if not selected:
+                return "Pilihan tidak valid. Pilih nomor atau tulis nama lokasi."
+            
+            result = run_mcp(query=selected, intent="WEATHER", force_context=True)
+            
             return handle_weather_result(result)
         
         if intent == "FLIGHT":
             # User lagi jawab pertanyaan clarifikasi (misal: "dari jakarta")
             # Merge jawaban user ke params yang sudah ada
-            old_params = s.get("last_flight_params") or {}
-            result = run_mcp(
-                query=query,
-                intent="FLIGHT",
-                session=s,
+            candidates = s.get("candidates", [])
+            choice = query.strip()
+
+            selected = None
+            
+            if choice.isdigit():
+                idx = int(choice) - 1
+                if 0 <= idx < len(candidates):
+                    selected = candidates[idx]
+            else:
+                selected = choice.upper()
+
+            if not selected:
+                return "Pilihan tidak valid."
+            
+            # ambil param lama
+            params = s.get("pending_params") or {}
+
+            # tentukan dia isi origin atau destination
+            if isinstance(params.get("departure_id"), list):
+                params["departure_id"] = selected
+            elif isinstance(params.get("arrival_id"), list):
+                params["arrival_id"] = selected
+
+            # langsung call search tanpa re-extract
+            from MCP.Flight.flight_search import search_flight_offers
+            from MCP.Flight.flight_beautifier import beautify_flight_offerst
+
+            result = search_flight_offers(
+                origin=params.get("departure_id"),
+                destination=params.get("arrival_id"),
+                type=params.get("type"),
+                departure_date=params.get("outbound_date"),
+                return_date=params.get("return_date"),
+                adults=params.get("adults", 1),
+                travel_class=params.get("travel_class"),
+                currency=params.get("currency")
             )
-            return handle_flight_result(result)
+
+            if result["status"] != "OK":
+                return "Gagal mencari tiket."
+
+            session.clear_confirmation()
+
+            return beautify_flight_offerst(result)
+
+            # old_params = s.get("last_flight_params") or {}
+            # merged_query = f"{old_params} {query}"
+            
+            # result = run_mcp(
+            #     query=query,
+            #     intent="FLIGHT",
+            #     session=s,
+            # )
+            # return handle_flight_result(result)
 
     # 2 classified the intent
     action = decision_routing(query)
@@ -142,9 +235,12 @@ def langchain_router(query: str, retriever = None, gemini = None) -> str:
     
     # Simpan kota ke session kalau ada di query
     from LLM.orchestrator import extract_city
+    print('extract city now')
     city = extract_city(query)
+    print('city extracted: ', city)
     if city:
         iata = city_to_iata(city)
+        print('city to iata extracted: ', city)
         session.update_city(cityname=city, iata=iata)
         print(f"[Session] Kota diekstrak dari LLM turn: {city} ({iata})")
  
