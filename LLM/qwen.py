@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 MODEL_NAME = "qwen/qwen3-1.7b"
+# sesuaiin dengan link LM Studio
 LM_STUDIO_URL = "http://127.0.0.1:1234/api/v1/chat" 
 # LM_STUDIO_URL = "http://192.168.68.118:1234/api/v1/chat"
 
@@ -41,7 +42,7 @@ def chat(messages: str | list, temperature: float =0 ) -> str | None:
             "input": messages,
             "temperature": temperature
         }
-    
+   # ori without reasoning 
     try: 
         r = requests.post(LM_STUDIO_URL, json=payload, timeout=200)
         r.raise_for_status()
