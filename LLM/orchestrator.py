@@ -23,10 +23,11 @@ def decision_routing(query: str) -> str:
 
                 - WEATHER  → cuaca, hujan, suhu, prakiraan, panas, dingin
                 - FLIGHT   → tiket pesawat, jadwal penerbangan, harga flight
+                - HOTEL   → hotel, penginapan, stay, resort, villa
                 - RAG      → dokumen, prospektus, laporan keuangan, saham
                 - LLM      → wisata, kuliner, rekomendasi tempat, obrolan umum
 
-                Balas SATU kata saja: WEATHER, FLIGHT, RAG, atau LLM.
+                Balas SATU kata saja: WEATHER, FLIGHT, HOTELS, RAG, atau LLM.
 
                 Query: {query}"""
 
@@ -34,7 +35,7 @@ def decision_routing(query: str) -> str:
     if not answer:
         return "LLM"
     answer = answer.strip().upper()
-    if answer not in["WEATHER", "FLIGHT", "RAG", "LLM"]:
+    if answer not in["WEATHER", "FLIGHT", "HOTEL", "RAG", "LLM"]:
         return "LLM"
 
     return answer

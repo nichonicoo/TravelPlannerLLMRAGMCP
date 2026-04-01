@@ -32,6 +32,10 @@ SESSION = {
     "candidates": [],
     "pending_query": None, 
     "pending_params": None,
+    
+    # Hotels
+    "last_hotels": [],
+    "hotel_turn_counter": 0,
 
     # Turn tracking
     "total_turns": 0,
@@ -52,6 +56,14 @@ def tick():
         if SESSION["city_turn_counter"] > EXPIRE_AFTER_N_TURNS:
             print(f"[Session] Konteks kota '{SESSION['last_city_name']}' expired setelah {EXPIRE_AFTER_N_TURNS} turn.")
             _reset_city()
+            
+    if SESSION["last_hotels"]:
+        SESSION["hotel_turn_counter"] += 1
+
+        if SESSION["hotel_turn_counter"] > EXPIRE_AFTER_N_TURNS:
+            print("[Session] Hotel context expired.")
+            SESSION["last_hotels"] = []
+            SESSION["hotel_turn_counter"] = 0
 
 def update_city(cityname: dict | str, adm4: str = None, iata: dict = None):
     """update city context. and incremet counter """
@@ -91,6 +103,10 @@ def update_flight(params: dict):
     SESSION["last_flight_params"] = params
     if params.get("origin"):
         SESSION["last_origin"] = params["origin"]
+
+def update_hotels(hotels: list):
+    SESSION["last_hotels"] = hotels
+    SESSION["hotel_turn_counter"] = 0
         
 def set_confirmation(intent: str, candidates: list):
     SESSION["awaiting_confirmation"] = True
@@ -122,6 +138,9 @@ def touch_city():
     """Panggil kalau kota disebut lagi tanpa perlu update nilainya."""
     SESSION["city_turn_counter"] = 0
 
+def has_hotels() -> bool:
+    return len(SESSION["last_hotels"]) > 0
+
 def has_city() -> bool:
     return SESSION["last_city_name"] is not None
 
@@ -141,6 +160,7 @@ def summary() -> str:
         f"last_destination={SESSION['last_destination']} |"
         f"awaiting={SESSION['awaiting_confirmation']} | "
         f"last_destination={SESSION['last_destination']}"
+        f"hotels={len(SESSION['last_hotels'])} "
     )
     
 # important function
@@ -154,6 +174,8 @@ def _reset_all():
     _reset_city()
     SESSION["last_origin"] = None
     SESSION["last_flight_params"] = None
+    SESSION["last_hotels"] = []
+    SESSION["hotel_turn_counter"] = 0
     SESSION["awaiting_confirmation"] = False
     SESSION["pending_intent"] = None
     SESSION["candidates"] = []

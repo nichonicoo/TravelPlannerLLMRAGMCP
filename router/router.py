@@ -165,6 +165,8 @@ def langchain_router(query: str, retriever = None, gemini = None) -> str:
             #     session=s,
             # )
             # return handle_flight_result(result)
+            
+        
 
     # 2 classified the intent
     action = decision_routing(query)
@@ -204,10 +206,12 @@ def langchain_router(query: str, retriever = None, gemini = None) -> str:
     # 4. normal routing
     
     if action == "WEATHER":
+        print('weather now')
         result = run_mcp(query=query, intent="WEATHER")
         return handle_weather_result(result)
     
     if action == "FLIGHT":
+        print('flight now')
         origin = s["last_origin"]
         if not origin:
             # Cek dulu apakah query sudah menyebut origin
@@ -220,6 +224,18 @@ def langchain_router(query: str, retriever = None, gemini = None) -> str:
  
         result = run_mcp(query=query, intent="FLIGHT", session=s)
         return handle_flight_result(result)
+    
+    if action == "HOTEL":
+        print('hotel now')
+        result = run_mcp(query=query, intent="HOTEL", session=s)
+
+        if result.get("status") == "NEED_INFO":
+            return result.get("message")
+
+        if result.get("status") == "ERROR":
+            return result.get("message")
+
+        return result.get("data")
     
     # RAG
     if action == "RAG":
