@@ -1,69 +1,33 @@
-# from MCP.mcp_weather import get_weather
-from MCP.BMKG.mcp_bmkg import get_bmkg_weather
-# from MCP.BMKG.location_resolver import get_adm4_candidates
-from MCP.BMKG.location_resolver import getLocation
+# MCP Main Router (Weather + future Flight support)
 
-# def run_mcp(query: str, intent: str = None, force_location: bool = False):
-#     q = query.lower()
+from MCP.BMKG.weather_handler import weather_handler
+from MCP.Flight.flight_handler import flight_handler
+from MCP.Hotel.hotel_handler import hotel_handler
 
-#     # 🔥 PRIORITY: intent dari router
-#     if intent == "WEATHER":
-#         result = get_adm4_candidates(query)
+# Future:
+# from MCP.Flight.flight_handler import flight_handler
 
-#         if result["status"] == "FOUND":
-#             return get_bmkg_weather(result["adm4"])
 
-#         if result["status"] == "AMBIGUOUS":
-#             return {
-#                 "status": "NEED_CONFIRMATION",
-#                 "candidates": result["candidates"]
-#             }
+def run_mcp(query: str, intent: str = None, force_context: bool = False, session: dict = None) -> dict:
+    """
+    Main MCP Router
+    Routes to WEATHER or FLIGHT handler.
+    """
+    # weather
+    if intent == "WEATHER":
+        return weather_handler(query = query, force_context= force_context)
+                # {
+                # "status": "CORRECT",
+                # "data": weather_handler(query=query, force_context=force_context)
+                # }
 
-#         return {"status": "NOT_FOUND"}
-
-#     # ---------------- fallback keyword-based ----------------
-#     if "cuaca" in q:
-#         result = get_adm4_candidates(query)
-
-#         if result["status"] == "FOUND":
-#             return get_bmkg_weather(result["adm4"])
-
-#         if result["status"] == "AMBIGUOUS":
-#             return {
-#                 "status": "NEED_CONFIRMATION",
-#                 "candidates": result["candidates"]
-#             }
-
-#         return {"status": "NOT_FOUND"}
-
-#     return {"status": "NO_MCP"}
-
-def run_mcp(query: str, intent: str = None, force_location: bool = False):
+    # flight
+    if intent == "FLIGHT":
+        # return flight_handler(query=query, force_context=force_context)
+        return flight_handler(query= query, session= session)
     
-    if intent != "WEATHER":
-        return {'status': "NOT_FOUND"}
-    
-    if force_location:
-        # langsung anggap query adalah ADM4 valid
-        adm4_code = getLocation(query)
-        
-        if adm4_code.get("status") == "FOUND":
-            weather = get_bmkg_weather(adm4_code["adm4"])
-            return {"status": "FOUND", "data": weather}
-        
-        return get_bmkg_weather(adm4_code["adm4"])
+    if intent == "HOTEL":
+        return hotel_handler(query= query, session_data= session)
 
-    result = getLocation(query)
-    
-    if result["status"] == "FOUND":
-        weather = get_bmkg_weather(result["adm4"])
-        return {"status": "FOUND", "data": weather}
-
-    if result["status"] == "AMBIGUOUS":
-        return {
-            "status": "NEED_CONFIRMATION",
-            "candidates": result["candidates"]
-        }
-
-    print('isi result ', result)
-    return {'status': "NOT_FOUND"}
+    # fallback
+    return {"status": "NO_MCP_MATCH"}

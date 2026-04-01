@@ -1,4 +1,4 @@
-from LLM.test_lmstudio import local_llm_chat
+from LLM.qwen import chat
 
 def return_weather_beautifier(query: str) -> bool:
     messages = f"""
@@ -28,7 +28,7 @@ def return_weather_beautifier(query: str) -> bool:
                     TULIS JAWABAN AKHIR:
                     """
 
-    answer = local_llm_chat(messages, temperature= 0)
+    answer = chat(messages, temperature= 0)
 
     if not answer:
         return False

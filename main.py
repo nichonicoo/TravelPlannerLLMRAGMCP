@@ -1,6 +1,7 @@
 # from RAG.rag_setup import setup_rag
 from LLM.gemini_model import model
-from router.langchain_router import langchain_router
+# from router.langchain_router import langchain_router
+from router.router import langchain_router
 
 retriever = None 
 

@@ -1,7 +1,12 @@
+# key webui 
+*.key
+*.pem
+.webui_secret_key
+
 # Virtual Environment
 venv/
+venv-webui/
 .env/
-
 # Python cache
 __pycache__/
 *.pyc
