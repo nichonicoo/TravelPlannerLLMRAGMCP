@@ -48,3 +48,5 @@ htmlcov/
 # Chroma / vector DB
 chroma/
 *.sqlite3
+
+.requirements.txt
