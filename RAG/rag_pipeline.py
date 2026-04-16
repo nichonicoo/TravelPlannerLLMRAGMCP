@@ -9,31 +9,17 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 
 
-# ========================
-# PATH CONFIG (FIXED)
-# ========================
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(BASE_DIR, ".."))
 
 DB_PATH = os.path.join(PROJECT_ROOT, "data", "chroma_db")
 DOC_PATH = os.path.join(BASE_DIR, "documents")
 
-
-# ========================
-# EMBEDDING
-# ========================
-
 embeddings = HuggingFaceEmbeddings(
     model_name="BAAI/bge-m3"
     # kalau error torch, ganti:
     # model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
-
-
-# ========================
-# INIT VECTOR DB
-# ========================
 
 def init_vector_db():
     print("DB_PATH:", DB_PATH)
@@ -73,11 +59,6 @@ def init_vector_db():
     print(f"Chunks created: {len(chunks)}")
     return db
 
-
-# ========================
-# RETRIEVAL
-# ========================
-
 def retrieve_context(vector_db, query, k=4):
     docs = vector_db.similarity_search(query, k=k)
 
@@ -88,11 +69,6 @@ def retrieve_context(vector_db, query, k=4):
         f"[SOURCE: {doc.metadata.get('source', 'unknown')}]\n{doc.page_content}"
         for doc in docs
     ])
-
-
-# ========================
-# PROMPT BUILDER
-# ========================
 
 def build_prompt(context, query):
     return f"""
