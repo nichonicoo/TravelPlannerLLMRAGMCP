@@ -4,7 +4,7 @@
 .webui_secret_key
 
 # Virtual Environment
-venv/
+.venv/
 venv-webui/
 .env/
 # Python cache
