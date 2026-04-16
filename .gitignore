@@ -5,6 +5,7 @@
 
 # Virtual Environment
 .venv/
+chroma_db/
 venv-webui/
 .env/
 # Python cache

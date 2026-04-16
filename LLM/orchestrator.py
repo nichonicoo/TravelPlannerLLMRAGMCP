@@ -23,11 +23,11 @@ def decision_routing(query: str) -> str:
 
                 - WEATHER  → cuaca, hujan, suhu, prakiraan, panas, dingin
                 - FLIGHT   → tiket pesawat, jadwal penerbangan, harga flight
-                - HOTEL   → hotel, penginapan, stay, resort, villa
-                - RAG      → dokumen, prospektus, laporan keuangan, saham
+                - HOTEL   → hotel, penginapan, stay, resort, villa, tempat menginap
+                - RAG      → pertanyaan berbasis informasi/pengetahuan (contoh: sejarah tempat wisata, kapan dibangun, fakta destinasi, dll)
                 - LLM      → wisata, kuliner, rekomendasi tempat, obrolan umum
 
-                Balas SATU kata saja: WEATHER, FLIGHT, HOTELS, RAG, atau LLM.
+                Balas SATU kata saja: WEATHER, FLIGHT, HOTEL, RAG, atau LLM.
 
                 Query: {query}"""
 

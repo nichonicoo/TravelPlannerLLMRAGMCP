@@ -3,11 +3,9 @@ from LLM.orchestrator import decision_routing, reference_prev_locations, city_to
 from LLM.llm_mode import llm_answering
 from MCP.mcp_mock import run_mcp
 from LLM.orchestrator import city_to_iata, extract_city, get_airport_full_name
-try: 
-    from RAG.research_agent import run_research_agent
-    RAG_AVAILABLE = True
-except ImportError:
-    RAG_AVAILABLE = False
+from RAG.rag_pipeline import init_vector_db, retrieve_context, build_prompt
+
+vector_db = init_vector_db()
     
 # was 1    
 def handle_weather_result(result: dict) -> str: 
@@ -239,12 +237,20 @@ def langchain_router(query: str, retriever = None, gemini = None) -> str:
     
     # RAG
     if action == "RAG":
-        if not RAG_AVAILABLE or retriever is None:
-            return "Maaf, fitur dokumen belum dimuat. Coba tanya hal lain dulu."
-        rag_answer = run_research_agent(query, retriever, gemini)
-        if "Informasi tidak tersedia" in rag_answer:
+        print("[Router] RAG mode")
+
+        context = retrieve_context(vector_db, query)
+
+        if not context.strip():
             return llm_answering(query)
-        return rag_answer
+
+        prompt = build_prompt(context, query)
+        answer = llm_answering(prompt)
+
+        if "tidak tahu" in answer.lower():
+            return llm_answering(query)
+
+        return answer
  
     # LLM — jawab langsung, tapi tetap ekstrak kota kalau ada
     answer = llm_answering(query)
