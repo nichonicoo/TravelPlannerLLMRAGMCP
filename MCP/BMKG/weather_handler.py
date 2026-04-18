@@ -11,6 +11,7 @@ from MCP.BMKG.location_resolver import getLocation
 from MCP.BMKG.mcp_bmkg import get_bmkg_weather
 from LLM.orchestrator import return_weather_beautifier
 from LLM.orchestrator import reference_prev_locations
+from langfuse import observe
 
 # Simple in-memory state for weather context
 # WEATHER_STATE = {
@@ -18,6 +19,7 @@ from LLM.orchestrator import reference_prev_locations
 #     "last_adm4": None
 # }
 
+@observe(name="weather_handler")
 def weather_handler(query: str, force_context: bool = False):
     """
     Main orchestration layer for WEATHER MCP

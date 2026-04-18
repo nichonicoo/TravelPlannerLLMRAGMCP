@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List, Optional
 from fastapi.middleware.cors import CORSMiddleware
-from langfuse import get_client
+from langfuse import get_client, observe
 
 langfuse = get_client()
 
@@ -55,6 +55,7 @@ def generate_response(prompt: str) -> str:
 # ENDPOINT: CHAT (WAJIB)
 # =========================
 @app.post("/v1/chat/completions")
+@observe(name="chat_endpoint")
 async def chat(req: ChatRequest):
     global retriever
 

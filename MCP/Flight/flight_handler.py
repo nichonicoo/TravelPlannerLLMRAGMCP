@@ -3,7 +3,9 @@ from MCP.Flight.flight_param_extractor import extract_flight_param, missing_para
 from MCP.Flight.flight_search import search_flight_offers
 from MCP.Flight.flight_beautifier import beautify_flight_offerst
 from LLM.orchestrator import extract_city, city_to_iata
+from langfuse import observe
 # yang lalu 1
+@observe(name="flight_handler")
 def flight_handler(query: str, session: dict = None, force_params: dict = None) -> dict: 
     """
     Main entry point flight MCP.

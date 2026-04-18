@@ -10,6 +10,7 @@ from LLM.qwen import chat
 import router.sessions as session
 import json
 import re
+from langfuse import observe
 
 def is_detail_request_llm(query: str) -> bool:
     prompt = f"""
@@ -57,6 +58,7 @@ def extract_index_fallback(query: str):
     match = re.search(r"\d+", query)
     return int(match.group()) - 1 if match else None
 
+@observe(name="hotel_handler")
 def hotel_handler(query: str, session_data: dict = None):
     
     if session_data is None:

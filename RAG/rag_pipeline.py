@@ -7,7 +7,7 @@ from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
-
+from langfuse import observe
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(BASE_DIR, ".."))
@@ -21,6 +21,7 @@ embeddings = HuggingFaceEmbeddings(
     # model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
 
+@observe(name="init_vector_db")
 def init_vector_db():
     print("DB_PATH:", DB_PATH)
     print("DOC_PATH:", DOC_PATH)
@@ -59,6 +60,7 @@ def init_vector_db():
     print(f"Chunks created: {len(chunks)}")
     return db
 
+@observe(name="retrieve_context")
 def retrieve_context(vector_db, query, k=4):
     docs = vector_db.similarity_search(query, k=k)
 
@@ -70,6 +72,7 @@ def retrieve_context(vector_db, query, k=4):
         for doc in docs
     ])
 
+@observe(name="build_prompt")
 def build_prompt(context, query):
     return f"""
 Anda adalah asisten pariwisata Indonesia.

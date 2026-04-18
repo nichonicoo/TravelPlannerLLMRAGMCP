@@ -4,6 +4,7 @@ from LLM.llm_mode import llm_answering
 from MCP.mcp_mock import run_mcp
 from LLM.orchestrator import city_to_iata, extract_city, get_airport_full_name
 from RAG.rag_pipeline import init_vector_db, retrieve_context, build_prompt
+from langfuse import observe
 
 vector_db = init_vector_db()
     
@@ -47,7 +48,7 @@ def handle_flight_result(result: dict) -> str:
         session.set_confirmation("FLIGHT", [])
         return result["message"]
     
-    if status == "AMBIGOUS":
+    if status == "AMBIGUOUS":
         session.set_confirmation("FLIGHT", result.get("candidates", []))
         session.get()["pending_params"] = result.get("params")
         
@@ -73,6 +74,7 @@ def handle_flight_result(result: dict) -> str:
  
     return f"Terjadi kesalahan: {result.get('message', 'unknown error')}"
 
+@observe(name="langchain_router")
 def langchain_router(query: str, retriever = None, gemini = None) -> str: 
     s = session.get()
     
@@ -205,7 +207,9 @@ def langchain_router(query: str, retriever = None, gemini = None) -> str:
     
     if action == "WEATHER":
         print('weather now')
-        result = run_mcp(query=query, intent="WEATHER")
+        with langfuse.trace(name="mcp_weather") as trace:
+            result = run_mcp(query=query, intent="WEATHER")
+            trace.end(output={"status": result.get("status"), "intent": "WEATHER"})
         return handle_weather_result(result)
     
     if action == "FLIGHT":
@@ -214,18 +218,24 @@ def langchain_router(query: str, retriever = None, gemini = None) -> str:
         if not origin:
             # Cek dulu apakah query sudah menyebut origin
             # flight_params_extractor akan handle ini di dalam flight_handler
-            result = run_mcp(query=query, intent="FLIGHT", session=s)
+            with langfuse.trace(name="mcp_flight") as trace:
+                result = run_mcp(query=query, intent="FLIGHT", session=s)
+                trace.end(output={"status": result.get("status"), "intent": "FLIGHT", "has_origin": False})
             # Kalau NEED_INFO berarti origin belum ada
             if result.get("status") == "NEED_INFO" and "origin" in result.get("missing", []):
                 session.set_confirmation("FLIGHT", [])
             return handle_flight_result(result)
  
-        result = run_mcp(query=query, intent="FLIGHT", session=s)
+        with langfuse.trace(name="mcp_flight") as trace:
+            result = run_mcp(query=query, intent="FLIGHT", session=s)
+            trace.end(output={"status": result.get("status"), "intent": "FLIGHT", "has_origin": True})
         return handle_flight_result(result)
     
     if action == "HOTEL":
         print('hotel now')
-        result = run_mcp(query=query, intent="HOTEL", session=s)
+        with langfuse.trace(name="mcp_hotel") as trace:
+            result = run_mcp(query=query, intent="HOTEL", session=s)
+            trace.end(output={"status": result.get("status"), "intent": "HOTEL"})
 
         if result.get("status") == "NEED_INFO":
             return result.get("message")
@@ -239,16 +249,28 @@ def langchain_router(query: str, retriever = None, gemini = None) -> str:
     if action == "RAG":
         print("[Router] RAG mode")
 
-        context = retrieve_context(vector_db, query)
+        with langfuse.trace(name="rag_operation") as trace:
+            with trace.span(name="retrieve_context"):
+                context = retrieve_context(vector_db, query)
+                trace.span(name="retrieve_context").end(output={"context_length": len(context)})
 
-        if not context.strip():
-            return llm_answering(query)
+            if not context.strip():
+                with trace.span(name="llm_fallback"):
+                    answer = llm_answering(query)
+                return answer
 
-        prompt = build_prompt(context, query)
-        answer = llm_answering(prompt)
+            with trace.span(name="build_prompt"):
+                prompt = build_prompt(context, query)
+                trace.span(name="build_prompt").end(output={"prompt_length": len(prompt)})
 
-        if "tidak tahu" in answer.lower():
-            return llm_answering(query)
+            with trace.span(name="llm_answering"):
+                answer = llm_answering(prompt)
+
+            if "tidak tahu" in answer.lower():
+                with trace.span(name="llm_fallback"):
+                    answer = llm_answering(query)
+
+            trace.end(output={"answer_length": len(answer), "has_rag_context": bool(context.strip())})
 
         return answer
  
