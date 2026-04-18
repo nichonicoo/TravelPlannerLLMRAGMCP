@@ -1,5 +1,6 @@
 # from RAG.rag_setup import setup_rag
 from LLM.gemini_model import model
+
 # from router.langchain_router import langchain_router
 from router.router import langchain_router
 
@@ -7,6 +8,9 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List, Optional
 from fastapi.middleware.cors import CORSMiddleware
+from langfuse import get_client
+
+langfuse = get_client()
 
 app = FastAPI()
 app.add_middleware(
@@ -16,15 +20,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
 # Data Model OpenAI Style
 class Message(BaseModel):
     role: str
     content: str
 
+
 class ChatRequest(BaseModel):
     model: Optional[str] = "qwen-local"
     messages: List[Message]
-    
+
+
 # helper format conversation
 def format_messages(messages: List[Message]) -> str:
     text = ""
@@ -37,9 +45,11 @@ def format_messages(messages: List[Message]) -> str:
             text += f"System: {m.content}\n"
     return text
 
+
 def generate_response(prompt: str) -> str:
     # 👉 nanti ganti dengan Qwen / LangChain
     return f"🤖 AI Response:\n{prompt[-200:]}"
+
 
 # =========================
 # ENDPOINT: CHAT (WAJIB)
@@ -47,29 +57,24 @@ def generate_response(prompt: str) -> str:
 @app.post("/v1/chat/completions")
 async def chat(req: ChatRequest):
     global retriever
-    
+
     query = req.messages[-1].content
 
     if retriever is None:
-        if any(k in query.lower() for k in ["prospektus", "saham", "laporan", "risiko"]):
+        if any(
+            k in query.lower() for k in ["prospektus", "saham", "laporan", "risiko"]
+        ):
             print("🧠 Loading RAG engine...")
             from RAG.rag_setup import setup_rag
+
             retriever = setup_rag()
             print("✅ RAG loaded")
 
     answer = langchain_router(query, retriever, model)
 
-    return {
-        "choices": [
-            {
-                "message": {
-                    "role": "assistant",
-                    "content": answer
-                }
-            }
-        ]
-    }
-    
+    return {"choices": [{"message": {"role": "assistant", "content": answer}}]}
+
+
 # =========================
 # ENDPOINT: MODELS (WAJIB)
 # =========================
@@ -77,14 +82,9 @@ async def chat(req: ChatRequest):
 async def get_models():
     return {
         "object": "list",
-        "data": [
-            {
-                "id": "qwen-local",
-                "object": "model",
-                "owned_by": "you"
-            }
-        ]
+        "data": [{"id": "qwen-local", "object": "model", "owned_by": "you"}],
     }
+
 
 # =========================
 # ROOT (optional)
@@ -93,17 +93,18 @@ async def get_models():
 async def root():
     return {"message": "Backend is running 🚀"}
 
-retriever = None 
+
+retriever = None
 
 # print("🔥 Ready!")
 # print("Ketik 'exit' untuk keluar.\n")
 
-# while True: 
+# while True:
 #     query = input("user: ")
-    
+
 #     if query == 'exit':
 #         break
-    
+
 #     if retriever is None:
 #         # heuristik murah: keyword RAG
 #         if any(k in query.lower() for k in ["prospektus", "saham", "laporan", "risiko"]):
@@ -111,7 +112,7 @@ retriever = None
 #             from RAG.rag_setup import setup_rag
 #             retriever = setup_rag()
 #             print("✅ RAG loaded")
-            
+
 #     answer = langchain_router(query, retriever, model)
 #     print("Bot:", answer)
 
@@ -134,7 +135,7 @@ retriever = None
 
 # while True:
 #     query = input("User: ")
-    
+
 #     if query == "exit":
 #         break
 
