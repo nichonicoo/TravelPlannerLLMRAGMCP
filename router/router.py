@@ -73,7 +73,7 @@ def handle_flight_result(result: dict) -> str:
  
     return f"Terjadi kesalahan: {result.get('message', 'unknown error')}"
 
-def langchain_router(query: str, retriever = None, gemini = None) -> str: 
+def langchain_router(query: str, retriever = None) -> str: 
     s = session.get()
     
     session.tick()

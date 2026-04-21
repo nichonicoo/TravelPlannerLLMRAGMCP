@@ -7,7 +7,11 @@
 .venv/
 chroma_db/
 venv-webui/
+.venv_webui/
 .env/
+
+requirements.txt
+
 # Python cache
 __pycache__/
 *.pyc

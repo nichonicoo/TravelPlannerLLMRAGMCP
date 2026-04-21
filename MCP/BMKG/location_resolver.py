@@ -22,13 +22,6 @@ ADM4_NAME_INDEX = {
 
 print(ADM4_NAME_INDEX)
 
-# ADM4_LOOKUP = {
-#     "yogyakarta": "34.71.01.1001",
-#     "jogja": "34.71.01.1001",
-#     "yogya": "34.71.01.1001",
-#     "bandung": "32.73.01.1001",
-#     "kemayoran": "31.71.03.1001",
-# }
 
 def extract_location(text: str) -> str:
     text = text.lower()
@@ -43,7 +36,6 @@ def extract_location(text: str) -> str:
     ]
     
     filtered = [w for w in words if w not in stopwords]
-
     # for w in stopwords:
     #     text = text.replace(w, "")
 

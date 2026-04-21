@@ -4,14 +4,11 @@ from MCP.BMKG.weather_handler import weather_handler
 from MCP.Flight.flight_handler import flight_handler
 from MCP.Hotel.hotel_handler import hotel_handler
 
-# Future:
-# from MCP.Flight.flight_handler import flight_handler
-
 
 def run_mcp(query: str, intent: str = None, force_context: bool = False, session: dict = None) -> dict:
     """
     Main MCP Router
-    Routes to WEATHER or FLIGHT handler.
+    Routes to WEATHER or FLIGHT handler or HOTEL handler.
     """
     # weather
     if intent == "WEATHER":

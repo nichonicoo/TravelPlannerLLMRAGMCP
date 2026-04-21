@@ -14,15 +14,15 @@ while True:
     if query == 'exit':
         break
     
-    if retriever is None:
-        # heuristik murah: keyword RAG
-        if any(k in query.lower() for k in ["prospektus", "saham", "laporan", "risiko"]):
-            print("🧠 Loading RAG engine...")
-            from RAG.rag_setup import setup_rag
-            retriever = setup_rag()
-            print("✅ RAG loaded")
+    # if retriever is None:
+    #     # heuristik murah: keyword RAG
+    #     if any(k in query.lower() for k in ["prospektus", "saham", "laporan", "risiko"]):
+    #         print("🧠 Loading RAG engine...")
+    #         from RAG.rag_setup import setup_rag
+    #         retriever = setup_rag()
+    #         print("✅ RAG loaded")
             
-    answer = langchain_router(query, retriever, model)
+    answer = langchain_router(query, retriever)
     print("Bot:", answer)
 
 # INIT RAG

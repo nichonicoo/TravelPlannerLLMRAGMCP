@@ -91,7 +91,8 @@ def hotel_handler(query: str, session_data: dict = None):
 
     # SEARCH MODE
     params = extract_hotel_params(query, session_data)
-
+    print("Extracted hotel params: ", params)
+    print("Location Data ", params.get("location"))
     if not params.get("location"):
         return {
             "status": "NEED_INFO",

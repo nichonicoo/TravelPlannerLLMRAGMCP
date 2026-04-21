@@ -50,14 +50,8 @@ async def chat(req: ChatRequest):
     
     query = req.messages[-1].content
 
-    if retriever is None:
-        if any(k in query.lower() for k in ["prospektus", "saham", "laporan", "risiko"]):
-            print("🧠 Loading RAG engine...")
-            from RAG.rag_setup import setup_rag
-            retriever = setup_rag()
-            print("✅ RAG loaded")
 
-    answer = langchain_router(query, retriever, model)
+    answer = langchain_router(query, retriever)
 
     return {
         "choices": [

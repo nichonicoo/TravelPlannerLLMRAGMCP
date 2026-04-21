@@ -6,7 +6,7 @@ load_dotenv()
 MODEL_NAME = "qwen/qwen3-1.7b"
 # sesuaiin dengan link LM Studio
 # LM_STUDIO_URL = "http://127.0.0.1:1234/api/v1/chat" 
-LM_STUDIO_URL = "http://192.168.68.118:1234/api/v1/chat"
+LM_STUDIO_URL = "http://127.0.0.1:1234/api/v1/chat"
 
 # def local_llm_chat(messages, temperature =0):
 #     payload = {

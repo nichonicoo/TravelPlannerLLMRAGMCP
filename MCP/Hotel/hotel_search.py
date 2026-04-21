@@ -3,10 +3,9 @@ import requests
 import os
 
 api_key = os.getenv("SERP_API_KEY")
-client = serpapi.Client(api_key= "8962b25df7d68e5f681dee47d5b60b686262e4c1a1836faa8bf218076b0e09ec")
+client = serpapi.Client(api_key= api_key)
 
 def search_hotel(params: dict) -> dict: 
-    print('params: ', params)
     # Detail Mode
     if params.get("property_token"):
         search_params = {
