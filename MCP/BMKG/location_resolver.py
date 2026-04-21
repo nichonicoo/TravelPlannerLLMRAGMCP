@@ -41,11 +41,11 @@ def extract_location(text: str) -> str:
 
     return " ".join(filtered).strip()
 
-def normalize(text: str) -> str :
-    text = text.lower()
-    text = re.sub(r"[^a-z\s]", "", text)
-    text = text.replace("kota", "")
-    return text.strip()
+# def normalize(text: str) -> str :
+#     text = text.lower()
+#     text = re.sub(r"[^a-z\s]", "", text)
+#     text = text.replace("kota", "")
+#     return text.strip()
 
 def getLocation(query: str, force: bool = False) -> dict:
     # print('query: ', query)
