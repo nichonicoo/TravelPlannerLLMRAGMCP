@@ -192,7 +192,7 @@ def _build_iata_index() -> dict:
             (df["iata_code"].notna()) &
             (df["iata_code"] != "") &
             (df["icao_code"] != None) &
-            (df["type"].isin(["large_airport", "medium_airport"]))
+            (df["type"].isin(["large_airport", "medium_airport"])) &
             (~df["name"].str.contains("UNUSABLE|Closed", case=False, na=False))
         ].copy()
         
@@ -345,15 +345,17 @@ def city_to_iata(city_name: dict) -> dict | None:
     if city_origin:
         if city_origin in PRIORITY_AIRPORTS:
             result['origin_iatas'] = PRIORITY_AIRPORTS[city_origin]
-        result['origin_iatas'] = get_city_fuzzy(city_origin)
+        else: 
+            result['origin_iatas'] = get_city_fuzzy(city_origin)
         #IATA_INDEX.get(city_origin, []) if city_origin else None
     if city_destination:
         if city_destination in PRIORITY_AIRPORTS:
             result['destination_iatas'] = PRIORITY_AIRPORTS[city_destination]
-        result['destination_iatas'] = get_city_fuzzy(city_destination)
+        else: 
+            result['destination_iatas'] = get_city_fuzzy(city_destination)
         # IATA_INDEX.get(city_destination, []) if city_destination else None
     
-    print(result)
+    print('[IATA RESULT]: ', result)
     return result
 
 def extract_city(query: str) -> dict | None:
