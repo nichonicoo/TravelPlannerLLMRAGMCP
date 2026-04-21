@@ -18,5 +18,10 @@ class Settings:
     OPENAI_MODEL_NAME = os.getenv("OPENAI_MODEL_NAME", "")
     OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "")
 
+    # lmstudio config
+    LMSTUDIO_MODEL_NAME = os.getenv("LMSTUDIO_MODEL_NAME", "")
+    LMSTUDIO_BASE_URL = os.getenv("LMSTUDIO_BASE_URL", "")
+    LMSTUDIO_TEMPERATURE = float(os.getenv("LMSTUDIO_TEMPERATURE", 0))
+
 
 settings = Settings()
