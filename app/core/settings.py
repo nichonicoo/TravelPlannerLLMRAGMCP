@@ -1,7 +1,9 @@
 import os
 from dotenv import load_dotenv
+from langfuse import get_client
 
 load_dotenv()
+langfuse = get_client()
 
 
 class Settings:
@@ -15,11 +17,6 @@ class Settings:
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
     OPENAI_MODEL_NAME = os.getenv("OPENAI_MODEL_NAME", "")
     OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "")
-
-    # langfuse config
-    LANGFUSE_PUBLIC_KEY = os.getenv("LANGFUSE_PUBLIC_KEY", "")
-    LANGFUSE_SECRET_KEY = os.getenv("LANGFUSE_SECRET_KEY", "")
-    LANGFUSE_BASE_URL = os.getenv("LANGFUSE_BASE_URL", "https://cloud.langfuse.com")
 
 
 settings = Settings()

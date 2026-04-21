@@ -1,5 +1,5 @@
-from app.infrastructure.llm.hf_llm import HuggingFaceLocal
-from app.infrastructure.llm.openai_provider import OpenAICompatibleProvider
+from app.infrastructure.llm.providers.hf_provider import HuggingFaceLocal
+from app.infrastructure.llm.providers.openai_provider import OpenAICompatibleProvider
 from app.core.settings import settings
 from app.infrastructure.llm.base import LLMProvider
 
