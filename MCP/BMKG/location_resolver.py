@@ -20,8 +20,6 @@ ADM4_NAME_INDEX = {
     for _, row in ADM4_DF.iterrows()
 }
 
-print(ADM4_NAME_INDEX)
-
 
 def extract_location(text: str) -> str:
     text = text.lower()
@@ -41,11 +39,6 @@ def extract_location(text: str) -> str:
 
     return " ".join(filtered).strip()
 
-# def normalize(text: str) -> str :
-#     text = text.lower()
-#     text = re.sub(r"[^a-z\s]", "", text)
-#     text = text.replace("kota", "")
-#     return text.strip()
 
 def getLocation(query: str, force: bool = False) -> dict:
     # print('query: ', query)

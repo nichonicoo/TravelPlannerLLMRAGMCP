@@ -13,7 +13,6 @@ while True:
     
     if query == 'exit':
         break
-    
     # if retriever is None:
     #     # heuristik murah: keyword RAG
     #     if any(k in query.lower() for k in ["prospektus", "saham", "laporan", "risiko"]):
