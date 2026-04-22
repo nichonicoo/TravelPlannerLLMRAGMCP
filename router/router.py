@@ -131,6 +131,12 @@ def langchain_router(query: str, retriever = None, gemini = None) -> str:
                 params["departure_id"] = selected
             elif isinstance(params.get("arrival_id"), list):
                 params["arrival_id"] = selected
+                
+            # Safety: ensure no list remains
+            if isinstance(params.get("departure_id"), list):
+                params["departure_id"] = params["departure_id"][0]
+            if isinstance(params.get("arrival_id"), list):
+                params["arrival_id"] = params["arrival_id"][0]
 
             # langsung call search tanpa re-extract
             from MCP.Flight.flight_search import search_flight_offers
@@ -218,7 +224,7 @@ def langchain_router(query: str, retriever = None, gemini = None) -> str:
             # Kalau NEED_INFO berarti origin belum ada
             if result.get("status") == "NEED_INFO" and "origin" in result.get("missing", []):
                 session.set_confirmation("FLIGHT", [])
-            return handle_flight_result(result)
+            return handle_flight_result(result) 
  
         result = run_mcp(query=query, intent="FLIGHT", session=s)
         return handle_flight_result(result)
