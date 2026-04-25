@@ -7,16 +7,12 @@ Responsible for:
 - returning structured MCP response
 """
 
-from MCP.BMKG.location_resolver import getLocation
-from MCP.BMKG.mcp_bmkg import get_bmkg_weather
-from LLM.orchestrator import return_weather_beautifier
-from LLM.orchestrator import reference_prev_locations
+from app.infrastructure.mcp.BMKG.location_resolver import WeatherLocationResolver
+from app.infrastructure.mcp.BMKG.mcp_bmkg import BMKGClient
 
-# Simple in-memory state for weather context
-# WEATHER_STATE = {
-#     "last_location_name": None,
-#     "last_adm4": None
-# }
+resolver = WeatherLocationResolver()
+client = BMKGClient()
+
 
 def weather_handler(query: str, force_context: bool = False):
     """
@@ -24,15 +20,16 @@ def weather_handler(query: str, force_context: bool = False):
     """
 
     # ---------------- REFERENCE REUSE ----------------
+    # from LLM.orchestrator import reference_prev_locations
     # if reference_prev_locations(query) and WEATHER_STATE["last_adm4"]:
     #     weather_data = get_bmkg_weather(WEATHER_STATE["last_adm4"])
 
     #     return return_weather_beautifier(weather_data)
 
     # Step 1: Resolve location
-    resolution = getLocation(query  , force= force_context)
+    resolution = resolver.getLocation(query, force=force_context)
     status = resolution.get("status")
-    
+
     # ---------------- AMBIGUOUS ----------------
     if status in ["AMBIGUOUS", "NEED_CONFIRMATION"]:
         return {
@@ -58,7 +55,7 @@ def weather_handler(query: str, force_context: bool = False):
         # WEATHER_STATE["last_location_name"] = location_name
         # WEATHER_STATE["last_adm4"] = adm4
 
-        weather_data = get_bmkg_weather(adm4)
+        weather_data = client.get_bmkg_weather(adm4)
 
         if not weather_data:
             return {
@@ -68,11 +65,11 @@ def weather_handler(query: str, force_context: bool = False):
             }
 
         return {
-        "status": "OK",
-        "adm4": adm4,
-        "location_name": location_name,
-        "data": return_weather_beautifier(weather_data),
-        "original_query": query
+            "status": "OK",
+            "adm4": adm4,
+            "location_name": location_name,
+            "data": weather_data,
+            "original_query": query
         }
 
     # ---------------- FALLBACK ----------------

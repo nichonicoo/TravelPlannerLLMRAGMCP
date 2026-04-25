@@ -1,77 +1,73 @@
-import os, sys
-
-# biar bisa import dari root project
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
+import os
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.abspath(os.path.join(BASE_DIR, ".."))
+class RAGEngine:
+    def __init__(self):
+        self.base_dir = os.path.dirname(os.path.abspath(__file__))
+        self.project_root = os.path.abspath(
+            os.path.join(self.base_dir, "../../../"))
 
-DB_PATH = os.path.join(PROJECT_ROOT, "data", "chroma_db")
-DOC_PATH = os.path.join(BASE_DIR, "documents")
+        self.doc_path = os.path.join(self.base_dir, "documents")
+        self.db_path = os.path.join(self.project_root, "data", "chroma_db")
 
-embeddings = HuggingFaceEmbeddings(
-    model_name="BAAI/bge-m3"
-    # kalau error torch, ganti:
-    # model_name="sentence-transformers/all-MiniLM-L6-v2"
-)
+        self.embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-m3")
+        self.vector_db = self._init_vector_db()
 
-def init_vector_db():
-    print("DB_PATH:", DB_PATH)
-    print("DOC_PATH:", DOC_PATH)
+    def _init_vector_db(self):
+        print("DB_PATH:", self.db_path)
+        print("DOC_PATH:", self.doc_path)
 
-    # kalau DB sudah ada
-    if os.path.exists(DB_PATH) and os.listdir(DB_PATH):
-        print("--- Load Vector DB ---")
-        return Chroma(
-            persist_directory=DB_PATH,
-            embedding_function=embeddings
+        # kalau DB sudah ada
+        if os.path.exists(self.db_path) and os.listdir(self.db_path):
+            print("--- Load Vector DB ---")
+            return Chroma(
+                persist_directory=self.db_path,
+                embedding_function=self.embeddings
+            )
+
+        print("--- Creating Vector DB ---")
+
+        loader = DirectoryLoader(
+            self.doc_path,
+            glob="*.txt",
+            loader_cls=lambda path: TextLoader(path, encoding="utf-8")
         )
 
-    print("--- Creating Vector DB ---")
+        docs = loader.load()
 
-    loader = DirectoryLoader(
-        DOC_PATH,
-        glob="*.txt",
-        loader_cls=lambda path: TextLoader(path, encoding="utf-8")
-    )
+        splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1000,
+            chunk_overlap=150
+        )
 
-    docs = loader.load()
+        chunks = splitter.split_documents(docs)
 
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,
-        chunk_overlap=150
-    )
+        db = Chroma.from_documents(
+            documents=chunks,
+            embedding=self.embeddings,
+            persist_directory=self.db_path
+        )
 
-    chunks = splitter.split_documents(docs)
+        print(f"Chunks created: {len(chunks)}")
+        return db
 
-    db = Chroma.from_documents(
-        documents=chunks,
-        embedding=embeddings,
-        persist_directory=DB_PATH
-    )
+    def retrieve_context(vector_db, query, k=4):
+        docs = vector_db.similarity_search(query, k=k)
 
-    print(f"Chunks created: {len(chunks)}")
-    return db
+        if not docs:
+            return ""
 
-def retrieve_context(vector_db, query, k=4):
-    docs = vector_db.similarity_search(query, k=k)
+        return "\n\n".join([
+            f"[SOURCE: {doc.metadata.get('source', 'unknown')}]\n{doc.page_content}"
+            for doc in docs
+        ])
 
-    if not docs:
-        return ""
-
-    return "\n\n".join([
-        f"[SOURCE: {doc.metadata.get('source', 'unknown')}]\n{doc.page_content}"
-        for doc in docs
-    ])
-
-def build_prompt(context, query):
-    return f"""
+    def build_prompt(context, query):
+        return f"""
 Anda adalah asisten pariwisata Indonesia.
 Jawab hanya berdasarkan data.
 

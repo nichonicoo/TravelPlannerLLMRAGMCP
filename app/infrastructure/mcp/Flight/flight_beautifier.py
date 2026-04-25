@@ -253,4 +253,16 @@ def beautify_flight_offerst(result: dict) -> str:
     # return chat(prompt, temperature=0.2)
         
     
-    
+def add_carrier_names(offers: list) -> list:
+    """
+    Tambahkan airline_name ke setiap segment dalam offers.
+    Dipanggil setelah parsing_offer() di flight_search.py.
+    """
+    for offer in offers:
+        if "error" in offer:
+            continue
+        for itin in offer.get("itineraries", []):
+            for seg in itin.get("segments", []):
+                code = seg.get("airline", "-")
+                seg["airline_name"] = get_carrier_name(code)
+    return offers

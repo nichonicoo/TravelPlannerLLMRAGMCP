@@ -1,7 +1,4 @@
-from LLM.qwen import chat
-
-def return_weather_beautifier(query: dict) -> str:
-    messages = f"""
+WEATHER_BEAUTIFIER_PROMPT = """
                     Kamu adalah asisten cuaca yang ramah dan informatif.
 
                     Gunakan data resmi dari BMKG di bawah ini untuk menjelaskan
@@ -15,7 +12,7 @@ def return_weather_beautifier(query: dict) -> str:
                     Sumber data: BMKG
 
                     DATA CUACA (FAKTA):
-                    {query}
+                    {raw_data}
 
                     ATURAN PENJELASAN:
                     1. Awali dengan ringkasan kondisi cuaca hari ini di wilayah tersebut.
@@ -27,10 +24,3 @@ def return_weather_beautifier(query: dict) -> str:
 
                     TULIS JAWABAN AKHIR:
                     """
-
-    answer = chat(messages, temperature= 0.2)
-
-    if not answer:
-        return False
-
-    return answer

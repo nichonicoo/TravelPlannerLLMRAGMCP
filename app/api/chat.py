@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
+from typing import List, Optional
 
 from app.core.dependencies import get_chat_service
 from app.services.chat_service import ChatService
@@ -32,7 +33,7 @@ async def hi():
 
 
 @router.post("/chat")
-async def chat(
+async def old_chat(
     request: OldChatRequest,
     service: ChatService = Depends(get_chat_service),
 ):
@@ -40,28 +41,19 @@ async def chat(
     return {"response": response}
 
 
-# @router.post("/v1/chat/completions")
-# async def chat(req: ChatRequest):
-#     global retriever
+@router.post("/v1/chat/completions")
+async def chat(req: ChatRequest, service: ChatService = Depends(get_chat_service)):
+    query = req.messages[-1].content
 
-#     query = req.messages[-1].content
+    answer = await service.tempchat(query)
 
-#     if retriever is None:
-#         if any(k in query.lower() for k in ["prospektus", "saham", "laporan", "risiko"]):
-#             print("🧠 Loading RAG engine...")
-#             from RAG.rag_setup import setup_rag
-#             retriever = setup_rag()
-#             print("✅ RAG loaded")
-
-#     answer = langchain_router(query, retriever, model)
-
-#     return {
-#         "choices": [
-#             {
-#                 "message": {
-#                     "role": "assistant",
-#                     "content": answer
-#                 }
-#             }
-#         ]
-#     }
+    return {
+        "choices": [
+            {
+                "message": {
+                    "role": "assistant",
+                    "content": answer
+                }
+            }
+        ]
+    }
