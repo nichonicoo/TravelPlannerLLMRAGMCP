@@ -152,7 +152,7 @@ def langchain_router(query: str, retriever = None) -> str:
                 travel_class=params.get("travel_class"),
                 currency=params.get("currency")
             )
-
+            print(f"result {result}")
             if result["status"] != "OK":
                 return "Gagal mencari tiket."
 
