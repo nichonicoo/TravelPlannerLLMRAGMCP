@@ -9,72 +9,49 @@ Responsible for:
 
 from app.infrastructure.mcp.BMKG.location_resolver import WeatherLocationResolver
 from app.infrastructure.mcp.BMKG.mcp_bmkg import BMKGClient
-
-resolver = WeatherLocationResolver()
-client = BMKGClient()
+import app.core.sessions as session
 
 
-def weather_handler(query: str, force_context: bool = False):
-    """
-    Main orchestration layer for WEATHER MCP
-    """
+class WeatherHandler:
+    def __init__(self, resolver=None, client=None):
+        self.resolver = resolver or WeatherLocationResolver()
+        self.client = client or BMKGClient()
 
-    # ---------------- REFERENCE REUSE ----------------
-    # from LLM.orchestrator import reference_prev_locations
-    # if reference_prev_locations(query) and WEATHER_STATE["last_adm4"]:
-    #     weather_data = get_bmkg_weather(WEATHER_STATE["last_adm4"])
+    async def __call__(self, params: dict) -> dict:
+        """
+        Making the class 'callable' allows you to use it in 
+        your MCPManager dict just like a function.
+        """
+        query = params.get("query", "")
 
-    #     return return_weather_beautifier(weather_data)
+        # 1. Technical logic
+        loc = self.resolver.getLocation(query)
 
-    # Step 1: Resolve location
-    resolution = resolver.getLocation(query, force=force_context)
-    status = resolution.get("status")
+        if loc["status"] == "NOT_FOUND":
+            return {"status": "ERROR", "message": "Lokasi tidak terdaftar di BMKG."}
 
-    # ---------------- AMBIGUOUS ----------------
-    if status in ["AMBIGUOUS", "NEED_CONFIRMATION"]:
-        return {
-            "status": "AMBIGUOUS",
-            "intent": "WEATHER",
-            "candidates": resolution.get("candidates", []),
-            "original_query": query
-        }
+        if loc["status"] == "AMBIGUOUS":
+            return {
+                "status": "AMBIGUOUS",
+                "candidates": loc["candidates"],
+                "message": "Pilih lokasi yang lebih spesifik:"
+            }
 
-    # ---------------- NOT FOUND ----------------
-    if status == "NOT_FOUND":
-        return {
-            "status": "NOT_FOUND",
-            "intent": "WEATHER"
-        }
+        session.update_city(loc["location_name"], loc["adm4"])
 
-    # ---------------- FOUND ----------------
-    if status == "FOUND":
-        adm4 = resolution.get("adm4")
-        location_name = resolution.get("location_name")
+        # 2. API logic
+        data = self.client.get_bmkg_weather(loc["adm4"])
 
-        # Save context
-        # WEATHER_STATE["last_location_name"] = location_name
-        # WEATHER_STATE["last_adm4"] = adm4
-
-        weather_data = client.get_bmkg_weather(adm4)
-
-        if not weather_data:
+        if "error" in data:
             return {
                 "status": "ERROR",
-                "intent": "WEATHER",
-                "message": "Gagal mengambil data cuaca dari BMKG."
+                "adm4": loc["adm4"],
+                "location_name": loc["location_name"],
             }
 
         return {
             "status": "OK",
-            "adm4": adm4,
-            "location_name": location_name,
-            "data": weather_data,
-            "original_query": query
+            "adm4": loc["adm4"],
+            "location_name": loc["location_name"],
+            "data": data
         }
-
-    # ---------------- FALLBACK ----------------
-    return {
-        "status": "ERROR",
-        "intent": "WEATHER",
-        "message": "Terjadi kesalahan dalam pemrosesan cuaca."
-    }

@@ -237,20 +237,6 @@ def beautify_flight_offerst(result: dict) -> str:
     response = chat(prompt, temperature=0.2)
 
     return response or base_text
-    # if result["status"] != "OK":
-    #     return "Maaf, tiket tidak ditemukan atau terjadi kesalahan."
-    
-    # offers = result.get("offers", [])
-    # offer_summary = build_offer_text(offers)
-    
-    # prompt = f"""Sajikan hasil pencarian penerbangan ini dengan ramah (Bahasa Indonesia).
-    # Rute: {result['origin']} -> {result['destination']}
-    # Data:
-    # {offer_summary}
-    
-    # Tampilkan maskapai, jam, dan harga. Jangan bertele-tele."""
-    
-    # return chat(prompt, temperature=0.2)
         
     
 def add_carrier_names(offers: list) -> list:

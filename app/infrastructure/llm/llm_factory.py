@@ -19,7 +19,7 @@ def create_llm_provider() -> LLMProvider:
     elif settings.LLM_PROVIDER == "lmstudio":
         return LMStudioProvider(
             model_id=settings.LMSTUDIO_MODEL_NAME,
-            base_url=settings.LMSTUDIO_BASE_URL,
+            base_url=settings.LM_STUDIO_URL,
             temperature=settings.LMSTUDIO_TEMPERATURE,
         )
     else:

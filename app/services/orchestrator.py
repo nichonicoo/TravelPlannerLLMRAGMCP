@@ -1,89 +1,140 @@
-import json
+from LLM.orchestrator import reference_prev_locations
+import app.core.sessions as session
 from app.infrastructure.llm.base import LLMProvider
+from app.infrastructure.rag.rag_pipeline import RAGEngine
+from app.infrastructure.mcp.mcp_manager import MCPManager
+from app.schemas.actions import ActionType
+from app.services.resolver import Resolver
+from app.services.extractors import Extractor
+from app.services.response_formatter import ResponseFormatter
 
 
-def decision_routing(query: str, llm: LLMProvider) -> str:
-    # messages = f"""
-    #         Klasifikasikan intent user ke salah satu:
-    #         - MCP = cuaca
-    #         - RAG = dokumen, laporan, saham, prospektus
-    #         - LLM = ngobrol umum / opini / penjelasan, kondisi saat ini
+class Orchestrator:
+    """Simple orchestrator that routes requests to MCP handlers.
+    Validation and ambiguity resolution are handled within each MCP handler."""
 
-    #         Balas SATU kata saja: MCP, RAG, atau LLM.
+    def __init__(self, llm: LLMProvider, rag: RAGEngine, mcp: MCPManager, resolver: Resolver, extractor: Extractor):
+        self.llm = llm
+        self.rag = rag
+        self.mcp = mcp
+        self.resolver = resolver
+        self.extractor = extractor
+        self.response_formatter = ResponseFormatter()
 
-    #         User query:
-    #         {query}
-    #         """
+    async def handle(self, query: str) -> str:
+        """Handle a user query by routing to the appropriate MCP handler."""
+        s = session.get()
+        session.tick()
 
-    prompting = f"""Kamu adalah orchestrator Travel Assistant.
-                Klasifikasikan intent user ke salah satu:
+        if s["state"]["awaiting_confirmation"]:
+            resolution = self.resolver.resolve(query)
 
-                - WEATHER  → cuaca, hujan, suhu, prakiraan, panas, dingin
-                - FLIGHT   → tiket pesawat, jadwal penerbangan, harga flight
-                - HOTEL   → hotel, penginapan, stay, resort, villa, tempat menginap
-                - RAG      → pertanyaan berbasis informasi/pengetahuan (contoh: sejarah tempat wisata, kapan dibangun, fakta destinasi, dll)
-                - LLM      → wisata, kuliner, rekomendasi tempat, obrolan umum
+            if resolution.get("action") == "RETRY":
+                result = self.mcp.execute(
+                    resolution["intent"],
+                    resolution["params"]
+                )
+                return self.resolver.process_result(
+                    resolution["intent"],
+                    result
+                )
+            elif resolution.get("action") == "ERROR":
+                return resolution["message"]
 
-                Balas SATU kata saja: WEATHER, FLIGHT, HOTEL, RAG, atau LLM.
+        intent = await self._decision_routing(query)
 
-                Query: {query}"""
+        session.smart_reset_if_needed(intent, query)
 
-    answer = llm.generate(prompting)
-    if not answer:
-        return "LLM"
-    answer = answer.strip().upper()
-    if answer not in ["WEATHER", "FLIGHT", "HOTEL", "RAG", "LLM"]:
-        return "LLM"
+        # TODO: implement reference_prev_locations
+        # if reference_prev_locations:
+        #     pass
 
-    return answer
+        if intent == "LLM":
+            result = {
+                "action": ActionType.GENERATE_RESPONSE,
+                "message": query
+            }
+        elif intent == "RAG":
+            result = await self._handle_rag(query)
+        elif intent == "WEATHER":
+            raw_result = await self.mcp.execute(intent, {"query": query})
+            result = self.resolver.process_result(intent, raw_result)
+        elif intent == "FLIGHT":
+            params = self._build_params(intent, query, s)
+            raw_result = await self.mcp.execute(intent, params)
+            result = self.resolver.process_result(intent, raw_result)
+        elif intent == "HOTEL":
+            params = self._build_params(intent, query, s)
+            raw_result = await self.mcp.execute(intent, params)
+            result = self.resolver.process_result(intent, raw_result)
 
+        formatted = self.response_formatter.format(intent, result)
 
-def reference_prev_locations(query: str, llm: LLMProvider) -> bool:
-    # function for cek apakah ini merujuk ke lokasi yg tadi di bicarakan
-    prompting = f"""Apakah kalimat ini menggunakan kata ganti seperti
-                "di situ", "ke sana", "di sana", "ke situ", "di tempat itu",
-                atau merujuk ke lokasi yang sudah disebutkan sebelumnya?
+        final_response = await self._maybe_beautify(intent, formatted)
 
-                Jawab HANYA: YA atau TIDAK.
+        return final_response
 
-                Kalimat: "{query}"
-                """
-    answer = llm.generate(prompting)
-    if not answer:
-        return False
+    async def _decision_routing(self, query: str) -> str:
+        prompting = f"""Kamu adalah orchestrator Travel Assistant.
+                    Klasifikasikan intent user ke salah satu:
 
-    return answer.strip().upper().startswith("YA")
+                    - WEATHER  → cuaca, hujan, suhu, prakiraan, panas, dingin
+                    - FLIGHT   → tiket pesawat, jadwal penerbangan, harga flight
+                    - HOTEL   → hotel, penginapan, stay, resort, villa, tempat menginap
+                    - RAG      → pertanyaan berbasis informasi/pengetahuan (contoh: sejarah tempat wisata, kapan dibangun, fakta destinasi, dll)
+                    - LLM      → wisata, kuliner, rekomendasi tempat, obrolan umum
 
+                    Balis SATU kata saja: WEATHER, FLIGHT, HOTEL, RAG, atau LLM.
 
-def extract_city(query: str, llm: LLMProvider) -> dict | None:
-    prompt = f"""Ekstrak nama kota (origin) atau lokasi wisata (destination) dari kalimat berikut.
-            Balas HANYA JSON: {{"origin": "nama", "destination": "nama"}}
-            Jika tidak ada, balas: None
+                    Query: {query}"""
 
-            Contoh:
-            - "ada apa di malang?" → {{"origin": None, "destination": "Malang"}}
-            - "cuaca hari ini?" → {{"origin": None, "destination": None}}
-            - "tiket ke bali" → Bali
-            - "Berapa harga tiket dari jakarta ke bali ?" -> {{"origin": "Jakarta", "destination": "Bali"}}
-            - "tiket ke bali dari jakarta" -> {{"origin": "Jakarta", "destination": "Bali"}}
-            - "terbang ke malang" -> {{"origin": null, "destination": "Malang"}}
+        answer = await self.llm.generate(prompting)
+        if not answer:
+            return "LLM"
+        answer = answer.strip().upper()
+        if answer not in ["WEATHER", "FLIGHT", "HOTEL", "RAG", "LLM"]:
+            return "LLM"
 
-            Kalimat: "{query}"
-             
-            """
-    answer = llm.generate(prompt)
+        return answer
 
-    if not answer or "NONE" in answer.upper():
-        return None
+    def _build_params(self, intent: str, query: str, session_data: dict):
+        builders = {
+            "FLIGHT": self.extractor.build_flight_params,
+            "HOTEL": self.extractor.build_hotel_params,
+        }
 
-    try:
-        # Mengubah string JSON dari LLM menjadi Dictionary Python
-        return json.loads(answer)
-    except Exception as e:
-        print(f"[LLM Error] Gagal parse JSON: {e}")
-        return None
+        builder = builders.get(intent)
 
-    # if not answer:
-    #     return None
-    # answer = answer.strip()
-    # return None if answer.upper() == "NONE" else answer
+        if builder:
+            return builder(query, session_data)
+
+        return {"query": query}
+
+    async def _handle_rag(self, query):
+        print("[Router] RAG mode")
+
+        context = self.rag.retrieve_context(query)
+
+        if not context.strip():
+            return {
+                "action": ActionType.ERROR,
+                "message": "RAG tidak mendapat hasil"
+            }
+
+        prompt = self.rag.build_prompt(context, query)
+        result = await self.llm.generate(prompt)
+
+        if "tidak tahu" in result.lower():
+            return {
+                "action": ActionType.ERROR,
+                "message": "LLM tidak dapat menemukan informasi yang relevan dari rag"
+            }
+
+        return {
+            "action": ActionType.GENERATE_RESPONSE,
+            "message": result
+        }
+
+    async def _maybe_beautify(self, intent: str, formatted: str) -> str:
+        # later implement if what intent, add prompt
+        return await self.llm.generate(formatted)

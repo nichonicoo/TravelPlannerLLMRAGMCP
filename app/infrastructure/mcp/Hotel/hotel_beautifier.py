@@ -15,7 +15,8 @@ def beautify_hotels(result: dict) -> str:
         link = h.get("link", "-")
 
         amenities = h.get("amenities", [])
-        amenities_str = ", ".join(amenities[:3]) if amenities else "Tidak tersedia"
+        amenities_str = ", ".join(
+            amenities[:3]) if amenities else "Tidak tersedia"
 
         lines.append(f"{i}. {name}")
         lines.append(f"   ⭐ {rating} ({reviews} reviews)")

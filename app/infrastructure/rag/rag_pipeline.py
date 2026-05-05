@@ -55,8 +55,8 @@ class RAGEngine:
         print(f"Chunks created: {len(chunks)}")
         return db
 
-    def retrieve_context(vector_db, query, k=4):
-        docs = vector_db.similarity_search(query, k=k)
+    def retrieve_context(self, query, k=4):
+        docs = self.vector_db.similarity_search(query, k=k)
 
         if not docs:
             return ""

@@ -1,7 +1,9 @@
-from app.core.settings import settings
 import os
 import pandas as pd
 from difflib import get_close_matches
+import app.core.sessions as session
+from app.core.settings import settings
+from app.schemas.actions import ActionType
 
 
 CARRIER_ALIASES = {
@@ -120,17 +122,216 @@ class Resolver:
             if city_origin in PRIORITY_AIRPORTS:
                 result['origin_iatas'] = PRIORITY_AIRPORTS[city_origin]
             else:
-                result['origin_iatas'] = get_city_fuzzy(city_origin)
+                result['origin_iatas'] = self.get_city_fuzzy(city_origin)
             # IATA_INDEX.get(city_origin, []) if city_origin else None
         if city_destination:
             if city_destination in PRIORITY_AIRPORTS:
                 result['destination_iatas'] = PRIORITY_AIRPORTS[city_destination]
             else:
-                result['destination_iatas'] = get_city_fuzzy(city_destination)
+                result['destination_iatas'] = self.get_city_fuzzy(
+                    city_destination)
             # IATA_INDEX.get(city_destination, []) if city_destination else None
 
         print('[IATA RESULT]: ', result)
         return result
+
+    def resolve(self, query: str) -> dict:
+        s = session.get()
+        state = s["state"]
+
+        intent = state["intent"]
+        candidates = state.get("candidates", [])
+        params = state.get("params", {})
+        field = state.get("field")
+
+        choice = query.strip()
+
+        selected = None
+
+        if choice.isdigit():
+            idx = int(choice) - 1
+            if 0 <= idx < len(candidates):
+                selected = candidates[idx]
+            else:
+                selected = choice
+
+        if not selected:
+            return {
+                "action": "ERROR",
+                "message": "Pilihan tidak valid. Pilih nomor atau tulis nama lokasi."
+            }
+
+        # ===== WEATHER =====
+        if intent == "WEATHER":
+            params[field] = selected
+            session.clear_confirmation()
+
+            return {
+                "action": "RETRY",
+                "intent": "WEATHER",
+                "params": params
+            }
+
+        # ===== FLIGHT (complex case) =====
+        if intent == "FLIGHT":
+            # merge into params
+            if isinstance(params.get("departure_id"), list):
+                params["departure_id"] = selected
+            elif isinstance(params.get("arrival_id"), list):
+                params["arrival_id"] = selected
+
+            # safety cleanup
+            if isinstance(params.get("departure_id"), list):
+                params["departure_id"] = params["departure_id"][0]
+            if isinstance(params.get("arrival_id"), list):
+                params["arrival_id"] = params["arrival_id"][0]
+
+            session.clear_confirmation()
+
+            return {
+                "action": "RETRY",
+                "intent": "FLIGHT",
+                "params": params
+            }
+
+        return {"status": "ERROR", "message": "Unknown confirmation state"}
+
+    def process_result(self, intent: str, result: dict) -> str:
+        if intent == "WEATHER":
+            return self._handle_weather(result)
+
+        if intent == "FLIGHT":
+            return self._handle_flight(result)
+
+        if intent == "HOTEL":
+            return self._handle_hotel(result)
+
+        return result
+
+    def _handle_weather(self, result: dict) -> str:
+        status = result.get("status")
+
+        if status == "OK":
+            session.update_city(
+                cityname=result.get("location_name"),
+                adm4=result.get("adm4"),
+            )
+            session.clear_confirmation()
+
+            return {
+                "action": ActionType.GENERATE_RESPONSE,
+                "message": result.get("data")
+            }
+
+        if status == "AMBIGUOUS":
+            session.set_confirmation(
+                intent="WEATHER",
+                candidates=result.get("candidates", []),
+                field="location",
+                params={"query": result.get("original_query")}
+            )
+
+            candidates = result.get("candidates", [])
+            formatted = "\n".join(
+                [f"{i+1}. {c}" for i, c in enumerate(candidates)])
+
+            return {
+                "action": ActionType.ASK_CLARIFICATION,
+                "message": f"Lokasi tidak dikenali secara pasti. Maksudnya yang mana?\n- {formatted}"
+            }
+
+        if status == "NOT_FOUND":
+            return {
+                "action": ActionType.INVALID_INPUT,
+                "message": "Maaf, lokasi tidak dikenali. Sebutkan nama kota yang lebih spesifik."
+            }
+
+        return {
+            "action": ActionType.ERROR,
+            "message": "Maaf, terjadi kesalahan saat mengambil data cuaca."
+        }
+
+    def _handle_flight(self, result: dict) -> dict:
+        status = result.get("status")
+
+        if status == "OK":
+            session.update_flight(result.get("params", {}))
+            session.clear_confirmation()
+
+            return {
+                "action": ActionType.GENERATE_RESPONSE,
+                "message": result["data"]
+            }
+
+        if status == "NEED_INFO":
+            session.set_confirmation(
+                intent="FLIGHT",
+                candidates=[],
+                field="missing",
+                params=result.get("params", {})
+            )
+
+            return {
+                "action": ActionType.NEED_MORE_INFO,
+                "message": result["message"]
+            }
+
+        if status == "AMBIGUOUS":
+            candidates = result.get("candidates", [])
+
+            session.set_confirmation(
+                intent="FLIGHT",
+                candidates=candidates,
+                field="airport",
+                params=result.get("params", {})
+            )
+
+            formatted = "\n".join([
+                f"{i+1}. {self.get_airport_full_name(c)}"
+                for i, c in enumerate(candidates)
+            ])
+
+            return {
+                "action": ActionType.ASK_CLARIFICATION,
+                "message": f"Bandara tidak spesifik:\n{formatted}"
+            }
+
+        if status == "NOT_FOUND":
+            return {
+                "action": ActionType.INVALID_INPUT,
+                "message": "Tidak ada penerbangan ditemukan."
+            }
+
+        return {
+            "action": ActionType.ERROR,
+            "message": "Terjadi kesalahan flight."
+        }
+
+    def _handle_hotel(self, result: dict) -> dict:
+        if result.get("status") == "OK":
+            session.update_hotels([
+                {
+                    "name": h.get("name"),
+                    "token": h.get("property_token")
+                }
+                for h in result.get("properties", [])[:5]
+            ])
+
+            return {
+                "action": ActionType.GENERATE_RESPONSE,
+                "message": result.get("data")
+            }
+
+        if result.get("status") == "NEED_INFO":
+            return {
+                "action": ActionType.NEED_MORE_INFO,
+                "message": result.get("message")
+            }
+
+        return {
+            "action": ActionType.ERROR,
+            "message": result.get("message", "Error hotel")
+        }
 
     def _build_carrier_code_index(self) -> dict:
         csv_path = os.path.join(self.project_root, "data", "carriers.csv")

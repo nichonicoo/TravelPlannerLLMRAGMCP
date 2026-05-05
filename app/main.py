@@ -14,8 +14,8 @@ async def lifespan(app: FastAPI):
     # Create LLM via factory
     llm = create_llm_provider()
     rag_engine = RAGEngine()
-    resolver = Resolver()
     mcp_manager = MCPManager()
+    resolver = Resolver()
 
     # Inject into app state
     app.state.chat_service = ChatService(

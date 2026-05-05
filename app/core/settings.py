@@ -25,7 +25,7 @@ class Settings:
 
     # lmstudio config
     LMSTUDIO_MODEL_NAME = os.getenv("LMSTUDIO_MODEL_NAME", "")
-    LMSTUDIO_BASE_URL = os.getenv("LMSTUDIO_BASE_URL", "")
+    LM_STUDIO_URL = os.getenv("LM_STUDIO_URL", "")
     LMSTUDIO_TEMPERATURE = float(os.getenv("LMSTUDIO_TEMPERATURE", 0))
 
     # serpapi config

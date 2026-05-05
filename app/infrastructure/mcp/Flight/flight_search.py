@@ -1,11 +1,8 @@
-# from MCP.Flight import amadeus_auth
-# from LLM.orchestrator import add_carrier_names
 import serpapi
-import requests
-import os
+from app.core.settings import settings
 
-api_key = os.getenv("SERP_API_KEY")
-client = serpapi.Client(api_key= "8962b25df7d68e5f681dee47d5b60b686262e4c1a1836faa8bf218076b0e09ec")
+api_key = settings.SERP_API_KEY
+client = serpapi.Client(api_key= api_key)
 
 data_tok = {
   "search_metadata": {
@@ -503,8 +500,11 @@ def search_flight_offers(
         print('data raw: ', response)
         
         offers = response.get("best_flights", []) or response.get("other_flights", [])
-        if not offers: 
-            print("offers is not available or not found")
+        if not offers:
+          return {
+            "status": "NOT_FOUND",
+            "message": "offers is not available or not found"
+          }
             
         parsed = parsing_offer(response)
         

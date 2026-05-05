@@ -1,4 +1,4 @@
-# session manager 
+# session manager
 # - Auto-expire konteks setelah EXPIRE_AFTER_N_TURNS turn tidak disebut
 # - Smart reset kalau topik non-travel
 # - Update otomatis kalau user sebut kota/lokasi baru
@@ -12,61 +12,72 @@ NON_TRAVEL_TOPICS = [
 ]
 
 SESSION = {
-    # Lokasi
-    "last_city_name": None,      # ex: "Malang"
-    "last_city_destination_name": None,
-    "last_city_iata": None,      # ex: "MLG"
-    "last_city_destination_iata": None,
-    "last_adm4": None,           # ex: "35.73.01.1001"
-    "last_city_destination_adm4": None,
-    "city_turn_counter": 0,      # berapa turn sejak kota terakhir disebut
+    "context": {
+        "city": {
+            "name": None,
+            "destination_name": None,
+            "iata": None,
+            "destination_iata": None,
+            "adm4": None,
+            "destination_adm4": None,
+            "turn_counter": 0,
+        },
+        "flight": {
+            "origin": None,
+            "destination": None,
+            "last_params": None,
+        },
+        "hotel": {
+            "last_results": [],
+            "turn_counter": 0,
+        }
+    },
 
-    # Flight
-    "last_origin": None,         # ex: "CGK" (Jakarta)
-    "last_destination": None,
-    "last_flight_params": None,  # dict hasil ekstrak Amadeus
+    "state": {
+        "awaiting_confirmation": False,
+        "intent": None,
+        "candidates": [],
+        "field": None,
+        "params": None,
+        "pending_query": None,
+        "pending_params": None,
+    },
 
-    # Confirmation state
-    "awaiting_confirmation": False,
-    "pending_intent": None,
-    "candidates": [],
-    "pending_query": None, 
-    "pending_params": None,
-    
-    # Hotels
-    "last_hotels": [],
-    "hotel_turn_counter": 0,
-
-    # Turn tracking
-    "total_turns": 0,
+    "meta": {
+        "total_turns": 0
+    }
 }
 
-# some kind of api 
+# some kind of api
+
 
 def get() -> dict:
     return SESSION
 
+
 def tick():
     """Panggil setiap awal turn. Increment counter dan expire kalau sudah stale."""
-    SESSION["total_turns"] += 1
+    SESSION["meta"]["total_turns"] += 1
 
-    if SESSION["last_city_name"] is not None:
-        SESSION["city_turn_counter"] += 1
+    if SESSION["context"]["city"]["name"] is not None:
+        SESSION["context"]["city"]["turn_counter"] += 1
 
-        if SESSION["city_turn_counter"] > EXPIRE_AFTER_N_TURNS:
-            print(f"[Session] Konteks kota '{SESSION['last_city_name']}' expired setelah {EXPIRE_AFTER_N_TURNS} turn.")
+        if SESSION["context"]["city"]["turn_counter"] > EXPIRE_AFTER_N_TURNS:
+            print(
+                f"[Session] Konteks kota '{SESSION['context']['city']['name']}' expired setelah {EXPIRE_AFTER_N_TURNS} turn.")
             _reset_city()
-            
-    if SESSION["last_hotels"]:
-        SESSION["hotel_turn_counter"] += 1
 
-        if SESSION["hotel_turn_counter"] > EXPIRE_AFTER_N_TURNS:
+    if SESSION["context"]["hotel"]["last_results"]:
+        SESSION["context"]["hotel"]["turn_counter"] += 1
+
+        if SESSION["context"]["hotel"]["turn_counter"] > EXPIRE_AFTER_N_TURNS:
             print("[Session] Hotel context expired.")
-            SESSION["last_hotels"] = []
-            SESSION["hotel_turn_counter"] = 0
+            SESSION["context"]["hotel"]["last_results"] = []
+            SESSION["context"]["hotel"]["turn_counter"] = 0
+
 
 def update_city(cityname: dict | str, adm4: str = None, iata: dict = None):
-    """update city context. and incremet counter """
+    """update city context. and increment counter """
     if isinstance(cityname, str):
         current_origin = cityname
         current_dest = None
@@ -74,50 +85,57 @@ def update_city(cityname: dict | str, adm4: str = None, iata: dict = None):
         # Jika dictionary, ambil pakai .get()
         current_origin = cityname.get('origin')
         current_dest = cityname.get('destination')
-        
-    old = SESSION["last_city_name"]
-    SESSION["last_city_name"] = current_origin
-    SESSION["last_city_destination_name"] = current_dest
-    SESSION["last_adm4"] = adm4
-    # SESSION["last_city_iata"] = iata.get('origin_iatas')
-    # SESSION["last_destination"] = iata.get('destination_iatas')
+
+    old = SESSION["context"]["city"]["name"]
+    SESSION["context"]["city"]["name"] = current_origin
+    SESSION["context"]["city"]["destination_name"] = current_dest
+    SESSION["context"]["city"]["adm4"] = adm4
+
     if iata and isinstance(iata, dict):
-        SESSION["last_city_iata"] = iata.get('origin_iatas')
-        SESSION["last_destination"] = iata.get('destination_iatas')
+        SESSION["context"]["city"]["iata"] = iata.get('origin_iatas')
+        SESSION["context"]["city"]["destination_iata"] = iata.get(
+            'destination_iatas')
     else:
-        SESSION["last_city_iata"] = None
-        SESSION["last_destination"] = None
-    SESSION["city_turn_counter"] = 0  # reset karena baru disebut
-    
+        SESSION["context"]["city"]["iata"] = None
+        SESSION["context"]["city"]["destination_iata"] = None
+
+    SESSION["context"]["city"]["turn_counter"] = 0  # reset karena baru disebut
+
     if old and current_origin and old.lower() != current_origin.lower():
         print(f"[Session] kota berubah: {old} -> {current_origin}")
     else:
         print(f"[Session] Kota tersimpan: {current_origin}")
-    
-    # if old and old.lower() != cityname.lower():
-    #     print(f"[Session] kota berubah menjadi: {old} -> {cityname}")
-    # else:
-    #     print(f"[Session] Kota tersimpan: {cityname}")
+
 
 def update_flight(params: dict):
-    SESSION["last_flight_params"] = params
+    SESSION["context"]["flight"]["last_params"] = params
     if params.get("origin"):
-        SESSION["last_origin"] = params["origin"]
+        SESSION["context"]["flight"]["origin"] = params["origin"]
+
 
 def update_hotels(hotels: list):
-    SESSION["last_hotels"] = hotels
-    SESSION["hotel_turn_counter"] = 0
-        
-def set_confirmation(intent: str, candidates: list):
-    SESSION["awaiting_confirmation"] = True
-    SESSION["pending_intent"] = intent
-    SESSION["candidates"] = candidates
-    
+    SESSION["context"]["hotel"]["last_results"] = hotels
+    SESSION["context"]["hotel"]["turn_counter"] = 0
+
+
+def set_confirmation(intent, field, candidates, params):
+    s = SESSION["state"]
+    s["awaiting_confirmation"] = True
+    s["intent"] = intent
+    s["field"] = field
+    s["candidates"] = candidates
+    s["params"] = params
+
+
 def clear_confirmation():
-    SESSION["awaiting_confirmation"] = False
-    SESSION["pending_intent"] = None
-    SESSION["candidates"] = []
-    
+    s = SESSION["state"]
+    s["awaiting_confirmation"] = False
+    s["intent"] = None
+    s["field"] = None
+    s["candidates"] = []
+    s["params"] = None
+
+
 def smart_reset_if_needed(action: str, query: str) -> bool:
     """
     Reset SESSION kalau topik benar-benar non-travel.
@@ -133,50 +151,59 @@ def smart_reset_if_needed(action: str, query: str) -> bool:
         return True
 
     return False
-    
+
+
 def touch_city():
     """Panggil kalau kota disebut lagi tanpa perlu update nilainya."""
-    SESSION["city_turn_counter"] = 0
+    SESSION["context"]["city"]["turn_counter"] = 0
+
 
 def has_hotels() -> bool:
-    return len(SESSION["last_hotels"]) > 0
+    return len(SESSION["context"]["hotel"]["last_results"]) > 0
+
 
 def has_city() -> bool:
-    return SESSION["last_city_name"] is not None
+    return SESSION["context"]["city"]["name"] is not None
+
 
 def has_origin() -> bool:
-    return SESSION["last_origin"] is not None
-    
+    return SESSION["context"]["flight"]["origin"] is not None
+
+
 def summary() -> str:
     """Debug print state SESSION."""
     return (
-        f"city={SESSION['last_city_name']} "
-        f"last city destination name ={SESSION['last_city_destination_name']} "
-        f"(turn_counter={SESSION['city_turn_counter']}) | "
-        f"adm4={SESSION['last_adm4']} | "
-        f"last_city_destination_adm4={SESSION['last_city_destination_adm4']} | "
-        f"iata={SESSION['last_city_iata']} | "
-        f"origin={SESSION['last_origin']} | "
-        f"last_destination={SESSION['last_destination']} |"
-        f"awaiting={SESSION['awaiting_confirmation']} | "
-        f"last_destination={SESSION['last_destination']}"
-        f"hotels={len(SESSION['last_hotels'])} "
+        f"city={SESSION['context']['city']['name']} "
+        f"destination_name={SESSION['context']['city']['destination_name']} "
+        f"(turn_counter={SESSION['context']['city']['turn_counter']}) | "
+        f"adm4={SESSION['context']['city']['adm4']} | "
+        f"destination_adm4={SESSION['context']['city']['destination_adm4']} | "
+        f"iata={SESSION['context']['city']['iata']} | "
+        f"origin={SESSION['context']['flight']['origin']} | "
+        f"destination={SESSION['context']['flight']['destination']} | "
+        f"awaiting={SESSION['state']['awaiting_confirmation']} | "
+        f"hotels={len(SESSION['context']['hotel']['last_results'])} "
     )
-    
+
 # important function
+
+
 def _reset_city():
-    SESSION["last_city_name"] = None
-    SESSION["last_city_iata"] = None
-    SESSION["last_adm4"] = None
-    SESSION["city_turn_counter"] = 0
+    SESSION["context"]["city"]["name"] = None
+    SESSION["context"]["city"]["iata"] = None
+    SESSION["context"]["city"]["adm4"] = None
+    SESSION["context"]["city"]["turn_counter"] = 0
+
 
 def _reset_all():
     _reset_city()
-    SESSION["last_origin"] = None
-    SESSION["last_flight_params"] = None
-    SESSION["last_hotels"] = []
-    SESSION["hotel_turn_counter"] = 0
-    SESSION["awaiting_confirmation"] = False
-    SESSION["pending_intent"] = None
-    SESSION["candidates"] = []
-
+    SESSION["context"]["flight"]["origin"] = None
+    SESSION["context"]["flight"]["destination"] = None
+    SESSION["context"]["flight"]["last_params"] = None
+    SESSION["context"]["hotel"]["last_results"] = []
+    SESSION["context"]["hotel"]["turn_counter"] = 0
+    SESSION["state"]["awaiting_confirmation"] = False
+    SESSION["state"]["intent"] = None
+    SESSION["state"]["candidates"] = []
+    SESSION["state"]["field"] = None
+    SESSION["state"]["params"] = None

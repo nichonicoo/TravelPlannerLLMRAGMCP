@@ -37,7 +37,7 @@ async def old_chat(
     request: OldChatRequest,
     service: ChatService = Depends(get_chat_service),
 ):
-    response = await service.chat(request.message)
+    response = await service.old_chat(request.message)
     return {"response": response}
 
 
@@ -45,7 +45,7 @@ async def old_chat(
 async def chat(req: ChatRequest, service: ChatService = Depends(get_chat_service)):
     query = req.messages[-1].content
 
-    answer = await service.tempchat(query)
+    answer = await service.chat(query)
 
     return {
         "choices": [
