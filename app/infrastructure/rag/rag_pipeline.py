@@ -66,7 +66,7 @@ class RAGEngine:
             for doc in docs
         ])
 
-    def build_prompt(context, query):
+    def build_prompt(self, context, query):
         return f"""
 Anda adalah asisten pariwisata Indonesia.
 Jawab hanya berdasarkan data.

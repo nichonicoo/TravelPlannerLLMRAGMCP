@@ -51,5 +51,5 @@ class ResponseFormatter:
     def _format_hotel(self, message: str) -> str:
         return message
 
-    def _format_rag(self, data: dict) -> str:
-        return str(data)
+    def _format_rag(self, message: str) -> str:
+        return message

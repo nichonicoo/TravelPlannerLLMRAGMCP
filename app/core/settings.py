@@ -16,6 +16,7 @@ class Settings:
 
     # hf config
     HF_MODEL_NAME = os.getenv("HF_MODEL_NAME", "distilgpt2")
+    HF_ADAPTER_NAME = os.getenv("HF_ADAPTER_NAME")
     HF_TOKEN = os.getenv("HF_TOKEN")
 
     # openai config

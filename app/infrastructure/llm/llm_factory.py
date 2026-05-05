@@ -8,7 +8,9 @@ from app.infrastructure.llm.base import LLMProvider
 def create_llm_provider() -> LLMProvider:
     if settings.LLM_PROVIDER == "hf":
         return HuggingFaceLocal(
-            model_id=settings.HF_MODEL_NAME, token=settings.HF_TOKEN
+            model_id=settings.HF_MODEL_NAME, 
+            # adapter_id=settings.HF_ADAPTER_NAME,
+            token=settings.HF_TOKEN
         )
     elif settings.LLM_PROVIDER == "openai":
         return OpenAICompatibleProvider(

@@ -11,13 +11,13 @@ class LMStudioProvider(LLMProvider):
         self.temperature = temperature
 
     @observe(name="lmstudio-generation", as_type="generation")
-    async def generate(self, prompt: str) -> str:
-        return await asyncio.to_thread(self._generate_sync, prompt)
+    async def generate(self, messages) -> str:
+        return await asyncio.to_thread(self._generate_sync, messages)
 
-    def _generate_sync(self, prompt: str) -> str:
+    def _generate_sync(self, messages) -> str:
         payload = {
             "model": self.model_id,
-            "input": prompt,
+            "input": messages,
             "temperature": self.temperature
         }
 
@@ -26,10 +26,12 @@ class LMStudioProvider(LLMProvider):
             r.raise_for_status()
             data = r.json()
 
-            for item in data.get("output", []):
-                if item.get("type") == "message":
-                    return item.get("content", "").strip()
-            return None
+
+            return data["choices"][0]["message"]["content"].strip()
+            # for item in data.get("output", []):
+            #     if item.get("type") == "message":
+            #         return item.get("content", "").strip()
+            # return None
 
         except Exception as e:
             print("Local LLM Error (LM Studio):", e)

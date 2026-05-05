@@ -18,9 +18,9 @@ class ChatService:
         # 2. MCP Step: Get real-time data if needed
 
         # 3. Combine into a prompt
-        prompt = f"User Question: {user_query}\nAnswer:"
+        messages = [{"role": "user", "content": user_query}]
 
-        return await self.llm.generate(prompt)
+        return await self.llm.generate(messages)
 
     async def chat(self, query: str) -> str:
         return await self.orchestrator.handle(query)
