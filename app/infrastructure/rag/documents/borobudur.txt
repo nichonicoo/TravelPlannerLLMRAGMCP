@@ -1,0 +1,147 @@
+---
+source: Wikipedia Indonesia
+topic: Candi Borobudur
+region: Indonesia
+type: situs_sejarah
+last_updated: 2026
+---
+
+=== METADATA ===
+nama: Candi Borobudur
+tipe: Candi Buddha
+lokasi: Borobudur, Magelang, Jawa Tengah, Indonesia
+agama: Buddha Mahayana
+status: aktif
+arsitek: Gunadharma (legenda)
+dinasti: Wangsa Syailendra
+
+=== DIMENSI ===
+panjang: 123 meter
+lebar: 123 meter
+tinggi: 35–42 meter
+material: batu andesit
+
+=== DESKRIPSI_UMUM ===
+Candi Borobudur adalah candi Buddha terbesar di dunia yang dibangun sekitar abad ke-8 hingga ke-9. Struktur terdiri dari enam teras persegi dan tiga pelataran melingkar, dengan 2.672 panel relief dan 504 arca Buddha.
+
+=== ARCA_OVERVIEW ===
+total_arca: 504
+arca_rupadhatu: 432
+arca_arupadhatu: 72
+arca_rusak: >300
+arca_hilang: 43
+tinggi_arca: 1.5 meter
+material: batu andesit
+
+Arca Buddha tersebar dalam relung dan stupa, dengan posisi duduk bersila dan berbagai mudra (sikap tangan simbolis).
+
+=== DISTRIBUSI_ARCA_RUPADHATU ===
+Barisan relung arca Buddha pada tingkat Rupadhatu:
+
+- baris_1: 104 arca
+- baris_2: 104 arca
+- baris_3: 88 arca
+- baris_4: 72 arca
+- baris_5: 64 arca
+
+total: 432 arca
+
+Arca pada tingkat ini berada di relung terbuka di sepanjang lorong.
+
+=== DISTRIBUSI_ARCA_ARUPADHATU ===
+Arca Buddha ditempatkan dalam stupa berterawang:
+
+- teras_1: 32 stupa
+- teras_2: 24 stupa
+- teras_3: 16 stupa
+
+total: 72 arca
+
+Arca ini melambangkan tingkat spiritual tertinggi.
+
+=== SISTEM_MUDRA ===
+Terdapat lima jenis mudra utama berdasarkan arah mata angin:
+
+- Timur
+- Selatan
+- Barat
+- Utara
+- Tengah
+
+Setiap mudra merepresentasikan Dhyani Buddha tertentu dalam ajaran Mahayana.
+
+=== DATA_ARCA_DHYANI_BUDDHA ===
+
+- Arca Timur
+nama: Akshobhya
+mudra: Bhumisparsa (menyentuh bumi)
+makna: memanggil bumi sebagai saksi
+lokasi: Rupadhatu sisi timur (4 baris pertama)
+
+- Arca Selatan
+nama: Ratnasambhava
+mudra: Wara (kedermawanan)
+makna: kemurahan hati
+lokasi: Rupadhatu sisi selatan (4 baris pertama)
+
+- Arca Barat
+nama: Amitabha
+mudra: Dhyana (meditasi)
+makna: konsentrasi dan ketenangan
+lokasi: Rupadhatu sisi barat (4 baris pertama)
+
+- Arca Utara
+nama: Amoghasiddhi
+mudra: Abhaya (tanpa takut)
+makna: perlindungan dan keberanian
+lokasi: Rupadhatu sisi utara (4 baris pertama)
+
+- Arca Tengah Rupadhatu
+nama: Wairocana
+mudra: Witarka (penalaran)
+makna: kebijaksanaan dan ajaran
+lokasi: baris ke-5 Rupadhatu
+
+- Arca Tengah Arupadhatu
+nama: Wairocana
+mudra: Dharmachakra (memutar roda dharma)
+makna: penyebaran ajaran Buddha
+lokasi: dalam 72 stupa Arupadhatu
+
+=== KARAKTERISTIK_ARCA ===
+- posisi: duduk bersila (padmasana)
+- orientasi: sesuai arah mata angin
+- fungsi: simbol perjalanan spiritual
+- perbedaan utama: mudra (bukan bentuk fisik)
+
+=== MAKNA_SPIRITUAL_ARCA ===
+Arca Buddha di Borobudur tidak hanya dekoratif, tetapi merupakan bagian dari sistem kosmologi Buddha.
+
+Perjalanan melihat arca mengikuti:
+- pradakshina (searah jarum jam)
+- naik dari Rupadhatu ke Arupadhatu
+- menuju pencerahan
+
+=== RELIEF ===
+total_relief: 2672
+relief_naratif: 1460
+
+Isi relief mencerminkan:
+- ajaran Buddha
+- kehidupan masyarakat
+- nilai moral
+
+=== ARSITEKTUR ===
+Borobudur berbentuk mandala yang melambangkan alam semesta. Struktur terdiri dari tiga bagian utama: kaki, tubuh, dan puncak.
+
+Bangunan menggunakan sistem interlock tanpa semen dan memiliki sistem drainase canggih.
+
+=== SEJARAH_SINGKAT ===
+dibangun: ~770–825 M
+ditinggalkan: abad ke-10
+ditemukan kembali: 1814
+pemugaran besar: 1975–1982
+unesco: 1991
+
+=== SIGNIFIKANSI ===
+Borobudur merupakan simbol budaya Indonesia dan pusat ibadah Buddha dunia, serta destinasi wisata utama.

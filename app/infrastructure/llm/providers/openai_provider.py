@@ -9,8 +9,9 @@ class OpenAICompatibleProvider(LLMProvider):
         self.model_id = model_id
 
     @observe(name="openai-generation", as_type="generation")
-    async def generate(self, prompt: str) -> str:
+    async def generate(self, messages) -> str:
         response = await self.client.chat.completions.create(
-            model=self.model_id, messages=[{"role": "user", "content": prompt}]
+            model=self.model_id,
+            messages=messages
         )
         return response.choices[0].message.content
