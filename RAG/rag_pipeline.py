@@ -71,17 +71,13 @@ def retrieve_context(vector_db, query, k=4):
     ])
 
 def build_prompt(context, query):
-    return f"""
-Anda adalah asisten pariwisata Indonesia.
-Jawab hanya berdasarkan data.
-
-Jika tidak ada dalam data, jawab: "Saya tidak tahu."
-
-DATA:
-{context}
-
-PERTANYAAN:
-{query}
-
-JAWABAN:
-"""
+    return [
+        {
+            "role": "system",
+            "content": "Anda adalah asisten pariwisata Indonesia. Jawab hanya berdasarkan data. Jika tidak ada dalam data, jawab: 'Saya tidak tahu.'"
+        },
+        {
+            "role": "user", 
+            "content": f"DATA:\n{context}\n\nPERTANYAAN:\n{query}\n\nJawab:"
+        }
+    ]
