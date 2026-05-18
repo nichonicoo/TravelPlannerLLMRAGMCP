@@ -7,9 +7,7 @@ from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 
-# =====================
 # CONFIG
-# =====================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DOC_PATH = os.path.join(BASE_DIR, "documents")
 
@@ -17,9 +15,7 @@ CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 150
 TOP_K = 4
 
-# =====================
 # MODELS
-# =====================
 MODELS = {
     "MiniLM": "sentence-transformers/all-MiniLM-L6-v2",
     "E5": "intfloat/e5-base",
@@ -27,9 +23,7 @@ MODELS = {
     "BGE-M3": "BAAI/bge-m3"
 }
 
-# =====================
 # QUERIES
-# =====================
 QUERIES = [
     "ibu kota NTB",
     "gunung tertinggi di NTB",
@@ -62,9 +56,7 @@ QUERIES = [
     "Berapa VEI letusan Toba"
 ]
 
-# =====================
 # LOAD & SPLIT
-# =====================
 def load_and_split():
     loader = DirectoryLoader(
         DOC_PATH,
@@ -81,16 +73,12 @@ def load_and_split():
 
     return splitter.split_documents(docs)
 
-# =====================
 # SIMPLE RELEVANCE
-# =====================
 def is_relevant(query, doc_text):
     words = query.lower().split()
     return any(w in doc_text.lower() for w in words)
 
-# =====================
-# SETUP COLLECTION
-# =====================
+# setup collection
 def setup_collection(name, dim):
     if utility.has_collection(name):
         utility.drop_collection(name)
@@ -113,9 +101,7 @@ def setup_collection(name, dim):
     collection.create_index("embedding", index_params)
     return collection
 
-# =====================
-# BENCHMARK
-# =====================
+# benchmark
 def benchmark_model(model_name, model_path, base_chunks):
     print(f"\n=== Testing {model_name} (Milvus Lite) ===")
 
@@ -181,11 +167,9 @@ def benchmark_model(model_name, model_path, base_chunks):
         "details": results
     }
 
-# =====================
-# RUN
-# =====================
+# run
 def run_benchmark():
-    # 🔥 MILVUS LITE CONNECTION (NO DOCKER)
+    # milvus lite 
     connections.connect(
         alias="default",
         uri="milvus_lite.db"
