@@ -18,7 +18,11 @@ class MCPManager:
         handler = self._handlers.get(intent)
 
         if not handler:
-            return {"status": "ERROR", "message": f"No handler found for intent: {intent}"}
+            return {
+                "status": "ERROR",
+                "error": "HANDLER_NOT_FOUND",
+                "message": f"No handler found for intent: {intent}"
+            }
 
         # All handlers now have standardized signature: handler(params: dict) -> dict
         return await handler(params)

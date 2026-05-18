@@ -10,15 +10,6 @@ class HotelHandler:
         Handle hotel search requests with standardized params dict.
         Returns status: OK, NEED_INFO, AMBIGUOUS, or ERROR.
         """
-        # If params contains "query", we need to extract from it (backward compatibility)
-        if "query" in params:
-            # This is handled by the orchestrator passing query
-            # For now, return NEED_INFO to indicate params need to be built
-            return {
-                "status": "NEED_INFO",
-                "message": "Hotel search requires specific parameters (location, check_in, check_out)",
-            }
-
         # DETAIL MODE
         if params.get("property_token"):
             result = self.client({
@@ -28,7 +19,8 @@ class HotelHandler:
             if result["status"] != "OK":
                 return {
                     "status": "ERROR",
-                    "message": result
+                    "error": "HOTEL_DETAIL_FAILED",
+                    "data": result
                 }
 
             return {
@@ -36,10 +28,33 @@ class HotelHandler:
                 "data": result
             }
 
+        # missing_fields = []
+
+        # if not params.get("location"):
+        #     missing_fields.append("location")
+
+        # if not params.get("check_in_date"):
+        #     missing_fields.append("check_in_date")
+
+        # if not params.get("check_out_date"):
+        #     missing_fields.append("check_out_date")
+
+        # if missing_fields:
+        #     return {
+        #         "status": "NEED_INFO",
+        #         "data": {
+        #             "missing_fields": missing_fields
+        #         },
+        #         "error": "MISSING_PARAMETERS"
+        #     }
+
         if not params.get("location"):
             return {
                 "status": "NEED_INFO",
-                "message": "Mau cari hotel di kota mana?",
+                "data": {
+                    "missing_fields": ["location"]
+                },
+                "error": "MISSING_LOCATION"
             }
 
         result = self.client(params)
@@ -47,7 +62,8 @@ class HotelHandler:
         if result["status"] != "OK":
             return {
                 "status": "ERROR",
-                "message": result
+                "error": "HOTEL_SEARCH_FAILED",
+                "data": result
             }
 
         return {

@@ -29,6 +29,7 @@ class Orchestrator:
         s = session.get()
         session.tick()
 
+        # TODO: Handle Confirmation Mode (Awaiting user confirmation)
         # if s["state"]["awaiting_confirmation"]:
         #     resolution = self.resolver.resolve(query)
 
@@ -47,10 +48,9 @@ class Orchestrator:
         # Info : Gas ganti intentnya kalau mau test fitur tertentu
         # intent = "LLM"
         intent = await self._decision_routing(query)
-
         session.smart_reset_if_needed(intent, query)
 
-        # TODO: implement reference_prev_locations
+        # TODO: implement extract city
         # if reference_prev_locations:
         #     pass
 

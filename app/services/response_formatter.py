@@ -7,20 +7,13 @@ class ResponseFormatter:
     def format(self, intent: str, result: dict) -> str:
         action = result.get("action")
 
-        if action == ActionType.ASK_CLARIFICATION:
-            return result["message"]
-
-        if action == ActionType.NEED_MORE_INFO:
-            return result["message"]
-
-        if action == ActionType.INVALID_INPUT:
-            return result["message"]
-
         if action == ActionType.ERROR:
             return result["message"]
 
         if action == ActionType.GENERATE_RESPONSE:
             return self._format_by_intent(intent, result)
+        elif action in [ActionType.ASK_CLARIFICATION, ActionType.NEED_MORE_INFO, ActionType.INVALID_INPUT]:
+            return result["message"]
 
         return "Terjadi kesalahan."
 

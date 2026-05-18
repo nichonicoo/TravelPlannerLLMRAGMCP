@@ -15,4 +15,9 @@ Run in paralel.
 1. install uv
 2. uv sync
 3. uv run uvicorn app.main:app --reload
-4. gas ke 127.0.0.1/8000/docs atau localhost:8000/docs
+4. go to ke 127.0.0.1/8000/docs atau localhost:8000/docs
+
+# To use the app/run_batch.py
+1. install uv
+2. uv sync
+3. uv run python app.run_batch

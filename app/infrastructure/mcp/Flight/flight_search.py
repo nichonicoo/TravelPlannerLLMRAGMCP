@@ -2,7 +2,7 @@ import serpapi
 from app.core.settings import settings
 
 api_key = settings.SERP_API_KEY
-client = serpapi.Client(api_key= api_key)
+client = serpapi.Client(api_key=api_key)
 
 data_tok = {
   "search_metadata": {
