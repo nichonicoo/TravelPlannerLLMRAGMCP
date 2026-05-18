@@ -20,4 +20,4 @@ Run in paralel.
 # To use the app/run_batch.py
 1. install uv
 2. uv sync
-3. uv run python app.run_batch
+3. uv run python -m app.run_batch
