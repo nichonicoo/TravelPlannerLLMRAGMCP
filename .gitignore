@@ -49,3 +49,6 @@ htmlcov/
 # Chroma / vector DB
 chroma/
 *.sqlite3
+
+benchmark_db/
+milvus_lite.db/

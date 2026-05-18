@@ -1,0 +1,117 @@
+model,query,relevant_docs,latency
+MiniLM,ibu kota NTB,4,0.06316089630126953
+MiniLM,gunung tertinggi di NTB,4,0.036847829818725586
+MiniLM,agama mayoritas NTB,3,0.02037215232849121
+MiniLM,sejarah pembentukan NTB,2,0.03464508056640625
+MiniLM,jumlah penduduk NTB,4,0.006006002426147461
+MiniLM,Luas wilayah Sulawesi Utara,4,0.005483865737915039
+MiniLM,Berapa jumlah arca di Rupadhatu,4,0.03319907188415527
+MiniLM,Berapa populasi NTT tahun 2025,4,0.027797937393188477
+MiniLM,Berapa jumlah sampah harian di Labuan Bajo,4,0.020925045013427734
+MiniLM,Berapa jumlah arca pada baris ketiga Rupadhatu,3,0.020399808883666992
+MiniLM,Berapa panjang Candi Borobudur dalam meter,2,0.021648168563842773
+MiniLM,Berapa luas wilayah NTT,3,0.007146120071411133
+MiniLM,Berapa lebar Danau Toba,2,0.02261495590209961
+MiniLM,Berapa tinggi Candi Borobudur,3,0.007949113845825195
+MiniLM,Berapa lebar Candi Borobudur,3,0.007164955139160156
+MiniLM,Berapa penurunan suhu global akibat letusan Toba,1,0.018841266632080078
+MiniLM,Berapa jumlah gunung di Sulawesi Utara,4,0.007983922958374023
+MiniLM,Berapa panjang Danau Toba,2,0.007175922393798828
+MiniLM,Berapa jumlah pulau di Sulawesi Utara,4,0.007309913635253906
+MiniLM,Berapa jumlah arca di Arupadhatu,4,0.006733894348144531
+MiniLM,Berapa kedalaman maksimal Danau Toba,2,0.007584810256958008
+MiniLM,Di sisi mana arca Amitabha berada,3,0.028487205505371094
+MiniLM,Kapan NTB dibentuk,0,0.007998943328857422
+MiniLM,Berapa luas wilayah Labuan Bajo,3,0.0075528621673583984
+MiniLM,Berapa populasi NTB tahun 2024,3,0.007828235626220703
+MiniLM,Apa makna mudra Bhumisparsa,3,0.007536888122558594
+MiniLM,Kapan Borobudur dibangun,1,0.008020162582397461
+MiniLM,Berapa luas Danau Toba,2,0.007133007049560547
+MiniLM,Berapa VEI letusan Toba,1,0.007068157196044922
+E5,ibu kota NTB,4,0.07393789291381836
+E5,gunung tertinggi di NTB,4,0.02923107147216797
+E5,agama mayoritas NTB,4,0.029102087020874023
+E5,sejarah pembentukan NTB,3,0.031736135482788086
+E5,jumlah penduduk NTB,4,0.012622833251953125
+E5,Luas wilayah Sulawesi Utara,4,0.01217508316040039
+E5,Berapa jumlah arca di Rupadhatu,4,0.028638839721679688
+E5,Berapa populasi NTT tahun 2025,4,0.025496721267700195
+E5,Berapa jumlah sampah harian di Labuan Bajo,4,0.03002023696899414
+E5,Berapa jumlah arca pada baris ketiga Rupadhatu,4,0.030233144760131836
+E5,Berapa panjang Candi Borobudur dalam meter,2,0.030591964721679688
+E5,Berapa luas wilayah NTT,4,0.01790595054626465
+E5,Berapa lebar Danau Toba,2,0.03505897521972656
+E5,Berapa tinggi Candi Borobudur,4,0.013372182846069336
+E5,Berapa lebar Candi Borobudur,3,0.014515876770019531
+E5,Berapa penurunan suhu global akibat letusan Toba,3,0.02659010887145996
+E5,Berapa jumlah gunung di Sulawesi Utara,4,0.013575077056884766
+E5,Berapa panjang Danau Toba,2,0.014584779739379883
+E5,Berapa jumlah pulau di Sulawesi Utara,4,0.013882875442504883
+E5,Berapa jumlah arca di Arupadhatu,4,0.01440286636352539
+E5,Berapa kedalaman maksimal Danau Toba,1,0.015700817108154297
+E5,Di sisi mana arca Amitabha berada,4,0.03043508529663086
+E5,Kapan NTB dibentuk,1,0.024540185928344727
+E5,Berapa luas wilayah Labuan Bajo,4,0.01767134666442871
+E5,Berapa populasi NTB tahun 2024,4,0.021142005920410156
+E5,Apa makna mudra Bhumisparsa,3,0.0174410343170166
+E5,Kapan Borobudur dibangun,2,0.02407979965209961
+E5,Berapa luas Danau Toba,3,0.015542745590209961
+E5,Berapa VEI letusan Toba,2,0.014151334762573242
+MultiLingual,ibu kota NTB,4,0.03933000564575195
+MultiLingual,gunung tertinggi di NTB,4,0.024133682250976562
+MultiLingual,agama mayoritas NTB,3,0.00786733627319336
+MultiLingual,sejarah pembentukan NTB,1,0.008065223693847656
+MultiLingual,jumlah penduduk NTB,3,0.00806283950805664
+MultiLingual,Luas wilayah Sulawesi Utara,4,0.013689756393432617
+MultiLingual,Berapa jumlah arca di Rupadhatu,4,0.013961076736450195
+MultiLingual,Berapa populasi NTT tahun 2025,3,0.022788047790527344
+MultiLingual,Berapa jumlah sampah harian di Labuan Bajo,4,0.01282501220703125
+MultiLingual,Berapa jumlah arca pada baris ketiga Rupadhatu,3,0.01529693603515625
+MultiLingual,Berapa panjang Candi Borobudur dalam meter,2,0.008826971054077148
+MultiLingual,Berapa luas wilayah NTT,4,0.008203744888305664
+MultiLingual,Berapa lebar Danau Toba,3,0.013846158981323242
+MultiLingual,Berapa tinggi Candi Borobudur,3,0.007998943328857422
+MultiLingual,Berapa lebar Candi Borobudur,2,0.007484912872314453
+MultiLingual,Berapa penurunan suhu global akibat letusan Toba,3,0.009016036987304688
+MultiLingual,Berapa jumlah gunung di Sulawesi Utara,4,0.007150173187255859
+MultiLingual,Berapa panjang Danau Toba,3,0.00706791877746582
+MultiLingual,Berapa jumlah pulau di Sulawesi Utara,4,0.007115840911865234
+MultiLingual,Berapa jumlah arca di Arupadhatu,4,0.007883071899414062
+MultiLingual,Berapa kedalaman maksimal Danau Toba,3,0.008322954177856445
+MultiLingual,Di sisi mana arca Amitabha berada,4,0.007941246032714844
+MultiLingual,Kapan NTB dibentuk,1,0.007107973098754883
+MultiLingual,Berapa luas wilayah Labuan Bajo,4,0.007379055023193359
+MultiLingual,Berapa populasi NTB tahun 2024,4,0.007423877716064453
+MultiLingual,Apa makna mudra Bhumisparsa,3,0.008114814758300781
+MultiLingual,Kapan Borobudur dibangun,3,0.007303953170776367
+MultiLingual,Berapa luas Danau Toba,4,0.0071392059326171875
+MultiLingual,Berapa VEI letusan Toba,2,0.008002042770385742
+BGE-M3,ibu kota NTB,4,0.41875314712524414
+BGE-M3,gunung tertinggi di NTB,4,0.07846188545227051
+BGE-M3,agama mayoritas NTB,4,0.04349684715270996
+BGE-M3,sejarah pembentukan NTB,4,0.059774160385131836
+BGE-M3,jumlah penduduk NTB,4,0.026702165603637695
+BGE-M3,Luas wilayah Sulawesi Utara,4,0.07077193260192871
+BGE-M3,Berapa jumlah arca di Rupadhatu,4,0.20758724212646484
+BGE-M3,Berapa populasi NTT tahun 2025,4,0.07738089561462402
+BGE-M3,Berapa jumlah sampah harian di Labuan Bajo,4,0.08900189399719238
+BGE-M3,Berapa jumlah arca pada baris ketiga Rupadhatu,4,0.10323596000671387
+BGE-M3,Berapa panjang Candi Borobudur dalam meter,4,0.036212921142578125
+BGE-M3,Berapa luas wilayah NTT,4,0.03592395782470703
+BGE-M3,Berapa lebar Danau Toba,3,0.1069040298461914
+BGE-M3,Berapa tinggi Candi Borobudur,4,0.03528308868408203
+BGE-M3,Berapa lebar Candi Borobudur,3,0.027508974075317383
+BGE-M3,Berapa penurunan suhu global akibat letusan Toba,4,0.0506901741027832
+BGE-M3,Berapa jumlah gunung di Sulawesi Utara,4,0.028113126754760742
+BGE-M3,Berapa panjang Danau Toba,3,0.028217077255249023
+BGE-M3,Berapa jumlah pulau di Sulawesi Utara,4,0.026109933853149414
+BGE-M3,Berapa jumlah arca di Arupadhatu,4,0.029179811477661133
+BGE-M3,Berapa kedalaman maksimal Danau Toba,3,0.04586601257324219
+BGE-M3,Di sisi mana arca Amitabha berada,4,0.03255105018615723
+BGE-M3,Kapan NTB dibentuk,4,0.03598308563232422
+BGE-M3,Berapa luas wilayah Labuan Bajo,4,0.032745361328125
+BGE-M3,Berapa populasi NTB tahun 2024,4,0.03715395927429199
+BGE-M3,Apa makna mudra Bhumisparsa,3,0.03421306610107422
+BGE-M3,Kapan Borobudur dibangun,3,0.02687215805053711
+BGE-M3,Berapa luas Danau Toba,3,0.030482053756713867
+BGE-M3,Berapa VEI letusan Toba,3,0.03388190269470215
