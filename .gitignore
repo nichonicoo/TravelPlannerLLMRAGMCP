@@ -52,4 +52,5 @@ chroma/
 *.sqlite3
 
 # Evals
-evals/outputs/
+evals/outputs/*
+!evals/outputs/.gitkeep
