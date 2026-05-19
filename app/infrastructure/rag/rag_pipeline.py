@@ -61,10 +61,12 @@ class RAGEngine:
         if not docs:
             return ""
 
-        return "\n\n".join([
-            f"[SOURCE: {doc.metadata.get('source', 'unknown')}]\n{doc.page_content}"
-            for doc in docs
-        ])
+        # return "\n\n".join([
+        #     f"[SOURCE: {doc.metadata.get('source', 'unknown')}]\n{doc.page_content}"
+        #     for doc in docs
+        # ])
+
+        return "\n\n".join([doc.page_content for doc in docs])
 
     def build_prompt(self, context, query):
         return f"""

@@ -109,8 +109,8 @@ def update_city(cityname: dict | str, adm4: str = None, iata: dict = None):
 
 def update_flight(params: dict):
     SESSION["context"]["flight"]["last_params"] = params
-    if params.get("origin"):
-        SESSION["context"]["flight"]["origin"] = params["origin"]
+    SESSION["context"]["flight"]["origin"] = params.get("origin_city")
+    SESSION["context"]["flight"]["destination"] = params.get("destination_city")
 
 
 def update_hotels(hotels: list):
@@ -118,7 +118,7 @@ def update_hotels(hotels: list):
     SESSION["context"]["hotel"]["turn_counter"] = 0
 
 
-def set_confirmation(intent, field, candidates, params):
+def set_confirmation(intent, field, candidates, params=None):
     s = SESSION["state"]
     s["awaiting_confirmation"] = True
     s["intent"] = intent
@@ -190,8 +190,11 @@ def summary() -> str:
 
 def _reset_city():
     SESSION["context"]["city"]["name"] = None
+    SESSION["context"]["city"]["destination_name"] = None
     SESSION["context"]["city"]["iata"] = None
+    SESSION["context"]["city"]["destination_iata"] = None
     SESSION["context"]["city"]["adm4"] = None
+    SESSION["context"]["city"]["destination_adm4"] = None
     SESSION["context"]["city"]["turn_counter"] = 0
 
 
@@ -207,3 +210,6 @@ def _reset_all():
     SESSION["state"]["candidates"] = []
     SESSION["state"]["field"] = None
     SESSION["state"]["params"] = None
+    SESSION["state"]["pending_query"] = None
+    SESSION["state"]["pending_params"] = None
+    SESSION["meta"]["total_turns"] = 0

@@ -19,8 +19,13 @@ class WeatherHandler:
 
     async def __call__(self, params: dict) -> dict:
         """
-        Making the class 'callable' allows you to use it in 
-        your MCPManager dict just like a function.
+        Standardized Weather MCP response.
+
+        Returns:
+        - OK
+        - AMBIGUOUS
+        - NOT_FOUND
+        - ERROR
         """
         query = params.get("query", "")
 
@@ -28,16 +33,17 @@ class WeatherHandler:
         loc = self.resolver.getLocation(query)
 
         if loc["status"] == "NOT_FOUND":
-            return {"status": "ERROR", "message": "Lokasi tidak terdaftar di BMKG."}
+            return {"status": "NOT_FOUND", "error": "Location not found in BMKG database"}
 
         if loc["status"] == "AMBIGUOUS":
             return {
                 "status": "AMBIGUOUS",
-                "candidates": loc["candidates"],
-                "message": "Pilih lokasi yang lebih spesifik:"
+                "data": {
+                    "field": "location",
+                    "candidates": loc.get("candidates", []),
+                    "params": params
+                }
             }
-
-        session.update_city(loc["location_name"], loc["adm4"])
 
         # 2. API logic
         data = self.client.get_bmkg_weather(loc["adm4"])
@@ -45,13 +51,20 @@ class WeatherHandler:
         if "error" in data:
             return {
                 "status": "ERROR",
-                "adm4": loc["adm4"],
-                "location_name": loc["location_name"],
+                "error": "BMKG API error",
+                "data": {
+                    "adm4": loc["adm4"],
+                    "location_name": loc["location_name"],
+                    "params": params
+                }
             }
 
         return {
             "status": "OK",
-            "adm4": loc["adm4"],
-            "location_name": loc["location_name"],
-            "data": data
+            "data": {
+                "location_name": loc["location_name"],
+                "adm4": loc["adm4"],
+                "weather": data,
+                "params": params
+            }
         }

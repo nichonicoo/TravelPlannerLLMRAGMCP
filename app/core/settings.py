@@ -11,6 +11,7 @@ class Settings:
     """Application settings with environment variables."""
     # Project root directory
     PROJECT_ROOT = Path(__file__).parent.parent.parent
+    EVALS_DIR = PROJECT_ROOT / "evals"
 
     LLM_PROVIDER = os.getenv("LLM_PROVIDER", "hf")
 
@@ -27,10 +28,20 @@ class Settings:
     # lmstudio config
     LMSTUDIO_MODEL_NAME = os.getenv("LMSTUDIO_MODEL_NAME", "")
     LM_STUDIO_URL = os.getenv("LM_STUDIO_URL", "")
-    LMSTUDIO_TEMPERATURE = float(os.getenv("LMSTUDIO_TEMPERATURE", 0))
 
     # serpapi config
     SERP_API_KEY = os.getenv("SERP_API_KEY", "")
+
+    @property
+    def LMSTUDIO_TEMPERATURE(self) -> float:
+        """Safely parses and returns the LM Studio temperature fallback to 0.0."""
+        raw_temp = os.getenv("LMSTUDIO_TEMPERATURE")
+        if raw_temp and raw_temp.strip():
+            try:
+                return float(raw_temp)
+            except ValueError:
+                pass
+        return 0.0
 
 
 settings = Settings()

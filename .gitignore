@@ -8,7 +8,8 @@
 venv-be/
 venv-webui/
 chroma_db/
-.env/
+.env.*
+!.env.example
 # Python cache
 __pycache__/
 *.pyc
@@ -49,3 +50,7 @@ htmlcov/
 # Chroma / vector DB
 chroma/
 *.sqlite3
+
+# Evals
+evals/outputs/*
+!evals/outputs/.gitkeep

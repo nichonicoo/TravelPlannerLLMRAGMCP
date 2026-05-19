@@ -153,12 +153,13 @@ class Resolver:
             if 0 <= idx < len(candidates):
                 selected = candidates[idx]
             else:
-                selected = choice
+                if choice in candidates:
+                    selected = choice
 
         if not selected:
             return {
-                "action": "ERROR",
-                "message": "Pilihan tidak valid. Pilih nomor atau tulis nama lokasi."
+                "action": ActionType.INVALID_INPUT,
+                "message": "Pilihan tidak valid."
             }
 
         # ===== WEATHER =====
@@ -174,17 +175,8 @@ class Resolver:
 
         # ===== FLIGHT (complex case) =====
         if intent == "FLIGHT":
-            # merge into params
-            if isinstance(params.get("departure_id"), list):
-                params["departure_id"] = selected
-            elif isinstance(params.get("arrival_id"), list):
-                params["arrival_id"] = selected
-
-            # safety cleanup
-            if isinstance(params.get("departure_id"), list):
-                params["departure_id"] = params["departure_id"][0]
-            if isinstance(params.get("arrival_id"), list):
-                params["arrival_id"] = params["arrival_id"][0]
+            if field:
+                params[field] = selected
 
             session.clear_confirmation()
 
@@ -210,34 +202,43 @@ class Resolver:
 
     def _handle_weather(self, result: dict) -> str:
         status = result.get("status")
+        payload = result.get("data", {})
+
 
         if status == "OK":
             session.update_city(
-                cityname=result.get("location_name"),
-                adm4=result.get("adm4"),
+                cityname=payload.get("location_name"),
+                adm4=payload.get("adm4"),
             )
             session.clear_confirmation()
 
             return {
                 "action": ActionType.GENERATE_RESPONSE,
-                "message": result.get("data")
+                "data": {
+                    "weather": payload.get("weather"),
+                    "location_name": payload.get("location_name")
+                }
             }
 
         if status == "AMBIGUOUS":
+            candidates = payload.get("candidates", [])
+            field = payload.get("field")
+
             session.set_confirmation(
                 intent="WEATHER",
-                candidates=result.get("candidates", []),
-                field="location",
-                params={"query": result.get("original_query")}
+                candidates=candidates,
+                field=field,
+                params=payload.get("params", {})
             )
 
-            candidates = result.get("candidates", [])
-            formatted = "\n".join(
-                [f"{i+1}. {c}" for i, c in enumerate(candidates)])
+            formatted = "\n".join([
+                f"{i+1}. {candidate}"
+                for i, candidate in enumerate(candidates)
+            ])
 
             return {
                 "action": ActionType.ASK_CLARIFICATION,
-                "message": f"Lokasi tidak dikenali secara pasti. Maksudnya yang mana?\n- {formatted}"
+                "message": f"Lokasi tidak dikenali secara pasti. Maksudnya yang mana?\n{formatted}"
             }
 
         if status == "NOT_FOUND":
@@ -253,37 +254,57 @@ class Resolver:
 
     def _handle_flight(self, result: dict) -> dict:
         status = result.get("status")
+        payload = result.get("data", {})
 
         if status == "OK":
-            session.update_flight(result.get("params", {}))
+            params = payload.get("params", {})
+
+            session.update_flight(params)
             session.clear_confirmation()
 
             return {
                 "action": ActionType.GENERATE_RESPONSE,
-                "message": result["data"]
+                "data": {
+                    "offers": payload.get("offers", []),
+                    "params": params
+                }
             }
 
         if status == "NEED_INFO":
+            missing_fields = payload.get("missing_fields", [])
+
             session.set_confirmation(
                 intent="FLIGHT",
                 candidates=[],
                 field="missing",
-                params=result.get("params", {})
+                params=payload.get("params", {})
             )
+
+            field_map = {
+                "departure_id": "kota asal",
+                "arrival_id": "kota tujuan",
+                "outbound_date": "tanggal keberangkatan"
+            }
+
+            readable = [
+                field_map.get(field, field)
+                for field in missing_fields
+            ]
 
             return {
                 "action": ActionType.NEED_MORE_INFO,
-                "message": result["message"]
+                "message": f"Lengkapi: {', '.join(readable)}"
             }
 
         if status == "AMBIGUOUS":
-            candidates = result.get("candidates", [])
+            candidates = payload.get("candidates", [])
+            field = payload.get("field")
 
             session.set_confirmation(
                 intent="FLIGHT",
                 candidates=candidates,
-                field="airport",
-                params=result.get("params", {})
+                field=field,
+                params=payload.get("params", {})
             )
 
             formatted = "\n".join([

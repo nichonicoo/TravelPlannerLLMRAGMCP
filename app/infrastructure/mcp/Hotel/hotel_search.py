@@ -23,8 +23,8 @@ def search_hotel(params: dict) -> dict:
             "hl": "id",
             "currency": params.get("currency", "IDR"),
 
-            "check_in_date": params["check_in_date"],
-            "check_out_date": params["check_out_date"],
+            "check_in_date": params.get("check_in_date"),
+            "check_out_date": params.get("check_out_date"),
 
             "adults": params.get("adults", 2),
             "children": params.get("children", 0),
