@@ -1,0 +1,27 @@
+{
+  "active_wal_number": 2,
+  "current_seq": 38,
+  "index_specs": {
+    "embedding": {
+      "build_params": {
+        "M": 8,
+        "efConstruction": 64
+      },
+      "field_name": "embedding",
+      "index_type": "HNSW",
+      "metric_type": "COSINE",
+      "search_params": {}
+    }
+  },
+  "manifest_format_version": 2,
+  "partitions": {
+    "_default": {
+      "data_files": [
+        "data/data_000001_000038.parquet"
+      ],
+      "delta_files": []
+    }
+  },
+  "schema_version": 1,
+  "version": 2
+}
