@@ -74,10 +74,22 @@ class HuggingFaceLocal(LLMProvider):
         with torch.no_grad():
             outputs = self.model.generate(
                 **inputs,
-                max_new_tokens=256,  # Bumped slightly for deep contextual summaries
+                max_new_tokens=1024,
+                do_sample=False,
                 pad_token_id=self.tokenizer.eos_token_id
             )
 
         # Decodes cleanly starting precisely where the model's generated text response begins
         new_tokens = outputs[0][input_length:]
-        return self.tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
+        response = self.tokenizer.decode(
+                new_tokens,
+                skip_special_tokens=True
+            ).strip()
+
+        # IMPORTANT: Clean up GPU memory immediately after generation
+        del outputs
+        del inputs
+
+        torch.cuda.empty_cache()
+
+        return response

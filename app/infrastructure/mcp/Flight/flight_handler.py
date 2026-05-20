@@ -89,7 +89,6 @@ class FlightHandler:
             departure_date=params.get("outbound_date"),
             return_date=params.get("return_date"),
             adults=params.get("adults", 1),
-            type=params.get("type"),
             travel_class=params.get("travel_class", "1"),
             currency=params.get("currency", "IDR")
         )

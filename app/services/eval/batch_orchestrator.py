@@ -192,6 +192,7 @@ class BatchOrchestrator:
         )
 
         tool_result = self._build_mcp_context(
+            intent,
             raw_result
         )
 
@@ -210,7 +211,6 @@ class BatchOrchestrator:
             "status": raw_result.get("status", "ERROR"),
             "response": response,
             "context": None,
-            "tool_result": raw_result,
         }
 
     # ==================================================
@@ -218,8 +218,67 @@ class BatchOrchestrator:
     # ==================================================
     def _build_mcp_context(
         self,
+        intent: str,
         result: dict
     ) -> str:
+        if intent == "FLIGHT":
+            offers = result.get("data", {}).get("offers", [])
+            if not offers:
+                return "No flight data available"
+
+            simplified = []
+
+            for offer in offers[:10]:
+                flight = offer["flights"][0]
+
+                simplified.append({
+                    "airline": flight.get("airline"),
+                    "flight_number": flight.get("flight_number"),
+                    "departure": flight["departure_airport"]["time"],
+                    "arrival": flight["arrival_airport"]["time"],
+                    "duration_minutes": flight.get("duration"),
+                    "price_idr": offer.get("price"),
+                })
+
+            return json.dumps(
+                simplified,
+                ensure_ascii=False
+            )
+        elif intent == "HOTEL":
+            properties = result.get("data", {}).get("properties", [])
+            if not properties:
+                return "No hotel data available"
+
+            simplified = []
+
+            for hotel in properties[:10]:
+                simplified.append({
+                    "name": hotel.get("name"),
+                    "hotel_class": hotel.get("extracted_hotel_class"),
+                    "price_per_night": hotel.get("rate_per_night", {})
+                        .get("extracted_lowest"),
+                    "total_price": hotel.get("total_rate", {})
+                        .get("extracted_lowest"),
+                    "rating": hotel.get("overall_rating"),
+                    "reviews": hotel.get("reviews"),
+                    "location_rating": hotel.get("location_rating"),
+                    "amenities": hotel.get("amenities", [])[:5],
+                    "check_in": hotel.get("check_in_time"),
+                    "check_out": hotel.get("check_out_time"),
+                    "nearby": [
+                        p.get("name")
+                        for p in hotel.get(
+                                "nearby_places",
+                                []
+                            )[:3]
+                        ],
+                    "property_token": hotel.get("property_token")
+                })
+
+            return json.dumps(
+                simplified,
+                ensure_ascii=False
+            )
 
         return json.dumps(
             result,
