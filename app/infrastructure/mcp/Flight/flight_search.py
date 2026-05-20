@@ -461,7 +461,6 @@ data_tok = {
 def search_flight_offers(
     origin, 
     destination, 
-    type, 
     departure_date, 
     return_date = None,
     adults = 1, 
@@ -475,7 +474,6 @@ def search_flight_offers(
             "engine": "google_flights",
             "departure_id": origin,
             "arrival_id": destination, 
-            "type": type, 
             "outbound_date": departure_date, 
             "return_date": return_date, 
             "travel_class": travel_class, 
@@ -497,7 +495,7 @@ def search_flight_offers(
         
     try:    
         response = client.search(params)
-        print('data raw: ', response)
+        # print('data raw: ', response)
         
         offers = response.get("best_flights", []) or response.get("other_flights", [])
         if not offers:
