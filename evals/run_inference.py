@@ -9,7 +9,7 @@ from app.infrastructure.llm.llm_factory import create_llm_provider
 from evals.prompts import LLM_PROMPT, RAG_PROMPT, MCP_PROMPT
 
 # Specify your generated intermediate stage 1 file path here
-STAGE1_INPUT_FILE = settings.EVALS_DIR / "3_enriched/context_prepared_CHANGEME.jsonl"
+STAGE1_INPUT_FILE = settings.EVALS_DIR / "3_enriched/context_prepared_20260521_230508.jsonl"
 
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 provider = settings.LLM_PROVIDER
