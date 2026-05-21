@@ -9,7 +9,7 @@ from app.infrastructure.llm.llm_factory import create_llm_provider
 from evals.prompts import LLM_PROMPT, RAG_PROMPT, MCP_PROMPT
 
 # Specify your generated intermediate stage 1 file path here
-STAGE1_INPUT_FILE = settings.EVALS_DIR / "3_enriched/context_prepared_20260521_230508.jsonl"
+INPUT_FILE = settings.EVALS_DIR / "3_enriched/context_prepared_20260521_230508.jsonl"
 
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 provider = settings.LLM_PROVIDER
@@ -32,10 +32,10 @@ async def main():
     # Initialize ONLY LLM resources for rapid inferencing
     llm = create_llm_provider()
     
-    print(f"Running inference from context cache: {STAGE1_INPUT_FILE}")
+    print(f"Running inference from context cache: {INPUT_FILE}")
     print(f"Writing definitive responses to: {OUTPUT_FILE}")
 
-    with open(STAGE1_INPUT_FILE, "r", encoding="utf-8") as infile, \
+    with open(INPUT_FILE, "r", encoding="utf-8") as infile, \
          open(OUTPUT_FILE, "w", encoding="utf-8") as outfile:
         
         for line in infile:
