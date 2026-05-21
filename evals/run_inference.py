@@ -18,7 +18,7 @@ adapter_name = settings.HF_ADAPTER_NAME.split("/")[-1].replace("-", "_") if sett
 
 OUTPUT_FILE = (
     settings.EVALS_DIR 
-    / "4_final" 
+    / "4_runs" 
     / f"final_inference_{provider}_{model_name}_{adapter_name}_{timestamp}.jsonl"
 )
 
