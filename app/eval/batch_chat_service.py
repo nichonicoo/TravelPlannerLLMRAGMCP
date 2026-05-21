@@ -1,7 +1,7 @@
 from app.infrastructure.llm.base import LLMProvider
 from app.infrastructure.rag.rag_pipeline import RAGEngine
 from app.infrastructure.mcp.mcp_manager import MCPManager
-from app.services.eval.batch_orchestrator import BatchOrchestrator
+from app.eval.batch_orchestrator import BatchOrchestrator
 from app.services.resolver import Resolver
 
 

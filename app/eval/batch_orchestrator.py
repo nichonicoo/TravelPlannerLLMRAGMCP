@@ -8,7 +8,7 @@ from app.infrastructure.mcp.mcp_manager import MCPManager
 from app.services.extractors import Extractor
 from app.services.resolver import Resolver
 
-from app.services.eval.prompts import (
+from app.eval.prompts import (
     LLM_PROMPT,
     RAG_PROMPT,
     MCP_PROMPT

@@ -3,7 +3,7 @@ import pandas as pd
 
 from app.core.settings import settings
 
-INPUT_FILE = settings.EVALS_DIR / "datasets/try_read_question.xlsx"
+INPUT_FILE = settings.EVALS_DIR / "inputs/excels/test_dataset.xlsx"
 OUTPUT_FILE = settings.EVALS_DIR / "outputs/output.xlsx"
 
 print(f"Input file path: {INPUT_FILE}")

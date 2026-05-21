@@ -6,11 +6,11 @@ from app.core.settings import settings
 from app.infrastructure.llm.llm_factory import create_llm_provider
 from app.infrastructure.rag.rag_pipeline import RAGEngine
 from app.infrastructure.mcp.mcp_manager import MCPManager
-from app.services.eval.batch_chat_service import BatchChatService
+from app.eval.batch_chat_service import BatchChatService
 from app.services.resolver import Resolver
 
 
-INPUT_FILE = settings.EVALS_DIR / "datasets/test_dataset.xlsx"
+INPUT_FILE = settings.EVALS_DIR / "inputs/excels/test_dataset.xlsx"
 timestamp = datetime.now().strftime(
     "%Y%m%d_%H%M%S"
 )
