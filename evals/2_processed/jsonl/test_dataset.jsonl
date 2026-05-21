@@ -1,0 +1,5 @@
+{"id": "q1", "intent": "LLM", "question": "Lokasi apa yang anda sarankan untuk liburan di Indonesia?", "params": {}}
+{"id": "q2", "intent": "RAG", "question": "Hal apa yang membuat Danau Toba menarik?", "params": {}}
+{"id": "q3", "intent": "WEATHER", "question": "Apakah hari ini hujan di Bandung?", "params": {}}
+{"id": "q4", "intent": "FLIGHT", "question": "Cari tiket ke Bali", "params": {"departure_id": "CGK", "arrival_id": "DPS", "start_date": "2026-09-10", "end_date": "2026-09-15"}}
+{"id": "q5", "intent": "HOTEL", "question": "Cari hotel di Bali", "params": {"location": "Bali", "start_date": "2026-09-10", "end_date": "2026-09-15"}}
