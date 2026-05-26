@@ -37,9 +37,9 @@ async def main():
     context_dir = settings.EVALS_DIR / "3_enriched"
 
     try:
-        INPUT_FILE = settings.EVALS_DIR / \
-            "3_enriched/context_prepared_20260521_230508.jsonl"
-        # INPUT_FILE = get_latest_context_file(context_dir)
+        # INPUT_FILE = settings.EVALS_DIR / \
+        #     "3_enriched/context_prepared_20260521_230508.jsonl"
+        INPUT_FILE = get_latest_context_file(context_dir)
     except FileNotFoundError as e:
         print(f"ERROR: {e}")
         sys.exit(1)

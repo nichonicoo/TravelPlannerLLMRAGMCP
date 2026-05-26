@@ -5,7 +5,7 @@ from datetime import datetime
 from app.core.settings import settings
 from app.infrastructure.rag.rag_pipeline import RAGEngine
 from app.infrastructure.mcp.mcp_manager import MCPManager
-from evals.context_helpers import build_mcp_params, build_mcp_context
+from evals.utils_context import build_mcp_params, build_mcp_context
 
 INPUT_FILE = settings.EVALS_DIR / "2_processed/jsonl/test_dataset.jsonl"
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
