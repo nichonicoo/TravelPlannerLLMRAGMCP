@@ -1,6 +1,7 @@
 import json
 import time
 import pandas as pd
+import re
 from app.infrastructure.llm.base import LLMProvider
 from app.infrastructure.rag.rag_pipeline import RAGEngine
 from app.infrastructure.mcp.mcp_manager import MCPManager
@@ -11,7 +12,10 @@ from app.services.resolver import Resolver
 from app.services.eval.prompts import (
     LLM_PROMPT,
     RAG_PROMPT,
-    MCP_PROMPT
+    MCP_PROMPT,
+    MCP_FLIGHT_PROMPT,
+    MCP_HOTEL_PROMPT,
+    MCP_WEATHER_PROMPT
 )
 
 
@@ -49,7 +53,7 @@ class BatchOrchestrator:
         self,
         intent: str,
         query: str,
-        row: dict
+        row: dict,
     ) -> dict:
 
         start = time.perf_counter()
@@ -195,10 +199,20 @@ class BatchOrchestrator:
             intent,
             raw_result
         )
-
+        
+        # system prompt
         system_prompt = MCP_PROMPT.format(
             tool_result=tool_result
         )
+        
+        if intent == "FLIGHT":
+            total_flights = len(raw_result) if isinstance(raw_result, list) else 1
+            system_prompt = MCP_FLIGHT_PROMPT.format(tool_result=tool_result, total_opsi=total_flights)
+        elif intent == "HOTEL":
+            total_hotels = len(raw_result) if isinstance(raw_result, list) else 1
+            system_prompt = MCP_HOTEL_PROMPT.format(tool_result=tool_result, total_opsi= total_hotels)
+        elif intent == "WEATHER":
+            system_prompt = MCP_WEATHER_PROMPT.format(tool_result=tool_result)
 
         messages = self._build_messages(
             system_prompt=system_prompt,
@@ -206,7 +220,11 @@ class BatchOrchestrator:
         )
 
         response = await self.llm.generate(messages)
+        # cleaned_response = re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL).strip()
 
+        # # 3. Antisipasi cadangan jika tag penutup </think> terpotong di akhir token generasi
+        # if "<think>" in cleaned_response:
+        #     cleaned_response = cleaned_response.split("<think>")[0].strip()
         return {
             "status": raw_result.get("status", "ERROR"),
             "response": response,
@@ -223,6 +241,8 @@ class BatchOrchestrator:
     ) -> str:
         if intent == "FLIGHT":
             offers = result.get("data", {}).get("offers", [])
+            departure_date = result.get("data", {}).get("departure_date")
+            return_date = result.get("data", {}).get("return_date")
             if not offers:
                 return "No flight data available"
 
@@ -230,24 +250,51 @@ class BatchOrchestrator:
 
             for offer in offers[:10]:
                 flight = offer["flights"][0]
+                
+                dep_airport = flight.get("departure_airport", {})
+                arr_airport = flight.get("arrival_airport", {})
 
                 simplified.append({
+                    "type": flight.get("type"),
+                    "airplane": flight.get("airplane"),
                     "airline": flight.get("airline"),
+                    "travel_class": flight.get("travel_class"),
+                    "legroom": flight.get("legroom"),
+                    "extensions": flight["extensions"],
                     "flight_number": flight.get("flight_number"),
                     "departure": flight["departure_airport"]["time"],
                     "arrival": flight["arrival_airport"]["time"],
                     "duration_minutes": flight.get("duration"),
                     "price_idr": offer.get("price"),
+                    "departure_airport_name": dep_airport.get("name"),
+                    "departure_airport_id": dep_airport.get("id"),
+                    "departure_time": dep_airport.get("time"),
+                    "arrival_airport_name": arr_airport.get("name"),
+                    "arrival_airport_id": arr_airport.get("id"),
+                    "arrival_time": arr_airport.get("time"),
+                    "departure_date": departure_date,
+                    "return_date": return_date
                 })
 
+                final_response = {
+                    "search": {
+                        "departure_date": departure_date,
+                        "arrival_date": return_date         
+                    },
+                    "flights":simplified
+                }
             return json.dumps(
-                simplified,
+                final_response,
                 ensure_ascii=False
             )
         elif intent == "HOTEL":
             properties = result.get("data", {}).get("properties", [])
+            search_params = result.get("data", {}).get("search_parameters")
             if not properties:
                 return "No hotel data available"
+            
+            check_in_date = search_params.get("check_in_date")
+            check_out_date = search_params.get("check_out_date")
 
             simplified = []
 
@@ -274,12 +321,19 @@ class BatchOrchestrator:
                         ],
                     "property_token": hotel.get("property_token")
                 })
-
+                
+                final_response = {
+                    "search": {
+                        "check_in_date": check_in_date,
+                        "check_out_date": check_out_date
+                    },
+                    "hotels": simplified
+                }
+                
             return json.dumps(
-                simplified,
+                final_response,
                 ensure_ascii=False
             )
-
         return json.dumps(
             result,
             ensure_ascii=False,
