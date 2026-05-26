@@ -1,0 +1,241 @@
+﻿id,intent,question,winner_model,judge_latency_sec,vote_A,vote_B,base_model_correctness,base_model_groundedness,base_model_completeness,base_model_clarity,base_model_helpfulness,qlora_model_correctness,qlora_model_groundedness,qlora_model_completeness,qlora_model_clarity,qlora_model_helpfulness,base_model_correctness_pct,base_model_groundedness_pct,base_model_completeness_pct,base_model_clarity_pct,base_model_helpfulness_pct,qlora_model_correctness_pct,qlora_model_groundedness_pct,qlora_model_completeness_pct,qlora_model_clarity_pct,qlora_model_helpfulness_pct,pass_1_base_first_winner,pass_1_base_first_confidence,pass_1_base_first_reasoning,pass_1_base_first_hallucination_detected_A,pass_1_base_first_hallucination_severity_A,pass_1_base_first_hallucination_detected_B,pass_1_base_first_hallucination_severity_B,pass_2_qlora_first_winner,pass_2_qlora_first_confidence,pass_2_qlora_first_reasoning,pass_2_qlora_first_hallucination_detected_A,pass_2_qlora_first_hallucination_severity_A,pass_2_qlora_first_hallucination_detected_B,pass_2_qlora_first_hallucination_severity_B,base_model_response,qlora_model_response
+q1,LLM,Lokasi apa yang anda sarankan untuk liburan di Indonesia?,TIE,60.886,1,1,3.5,3.0,4.0,4.0,3.5,3.5,3.0,3.5,4.0,3.5,62.5,50.0,75.0,75.0,62.5,62.5,50.0,62.5,75.0,62.5,A,0.9,"Jawaban A lebih akurat dan lebih grounded pada context, dengan informasi yang lebih lengkap, jelas, dan bertanggung jawab.",False,0,True,2,A,0.9,"Jawaban A lebih akurat dan lebih grounded pada context, serta menyediakan informasi yang lebih lengkap dan bertanggung jawab lebih terhadap intent pengguna.",False,0,True,2,"Pembuka:
+Indonesia, dengan keanekaragaman alam dan budaya yang tak terhitung jumlahnya, menawarkan berbagai pilihan liburan yang tak bisa dilupakan. Namun, jika kita mencari destinasi yang mampu menggabungkan keindahan alam, kekayaan sejarah, dan kehidupan lokal yang kaya, maka Labuan Bajo di Nusa Tenggara Timur menjadi pilihan yang sangat menarik. Terkenal sebagai pintu masuk ke dunia Komodo, Labuan Bajo bukan hanya menawarkan kesempatan untuk berinteraksi langsung dengan dinosaurus modern, tetapi juga berbagai aktivitas dan keindahan lain yang akan membuat setiap detik liburan Anda menjadi kenangan yang tak terlupakan.
+
+Rekomendasi Aktivitas:
+Labuan Bajo memiliki banyak tempat menarik yang layak dikunjungi. Salah satunya adalah Pulau Rinca, salah satu pulau komodo terbesar di dunia. Di sini, Anda dapat berjalan-jalan di hutan tropis dan berinteraksi langsung dengan komodo, dinosaurus modern yang masih hidup. Selain itu, Pulau Padar juga merupakan tujuan populer karena bentuk gunung berbukitnya yang unik dan indah. Anda bisa naik ke puncak gunung untuk melihat panorama pemandangan yang luar biasa. Selain itu, Labuan Bajo juga menawarkan berbagai aktivitas laut seperti snorkeling dan diving di Pantai Wai, di mana Anda bisa melihat berbagai jenis ikan dan corail yang berwarna-warni.
+
+Tips Perjalanan:
+Untuk mencapai Labuan Bajo, Anda bisa menggunakan penerbangan dari Jakarta atau Surabaya ke Bandara Kupang, yang terletak di dekat Labuan Bajo. Penerbangan ini biasanya memakan waktu sekitar 2 jam. Untuk mengunjungi Labuan Bajo, waktu terbaik adalah saat musim kemarau, yaitu dari bulan Juni hingga September. Selama periode ini, cuaca stabil dan ombak tidak terlalu besar, sehingga memudahkan aktivitas laut seperti diving dan snorkeling.
+
+Penutup:
+Labuan Bajo adalah destinasi yang tak hanya menawarkan keindahan alam dan kehidupan liar, tetapi juga berbagai budaya dan sejarah yang kaya. Dengan berbagai aktivitas yang tersedia, Labuan Bajo pasti akan memberikan pengalaman liburan yang tak terlupakan. Jadi, jangan ragu untuk merencanakan liburan Anda di Labuan Bajo. Indonesia menantikan Anda untuk menjelajahi pesona nusantara yang tak terbatas!","Saya sarankan mengunjungi Borobudur. Selain karena statusnya sebagai candi Buddha tertua di dunia, Borobudur memiliki atmosfer yang sangat tenang dan spiritual. Anda bisa menikmati pemandangan Gunung Merapi dari ketinggian, melihat relief yang mengisahkan hidup roda dunia, dan menikmati pemandangan sawah hijau yang luas dari Bukit Punthuk Setumbu."
+q2,RAG,Hal apa yang membuat Danau Toba menarik?,TIE,84.929,1,1,3.5,3.0,3.5,4.0,3.5,3.5,3.0,4.0,4.0,3.5,62.5,50.0,62.5,75.0,62.5,62.5,50.0,75.0,75.0,62.5,A,0.9,"Jawaban A lebih akurat dan lebih grounded pada context, serta menyediakan informasi yang lebih lengkap dan bertambahan yang bertanggung jawab kepada intent pengguna.",False,0,True,2,A,0.9,"Jawaban A lebih akurat dan lebih grounded pada context, serta menyediakan informasi yang lebih lengkap dan bertambahan yang tidak didukung oleh context.",False,0,True,2,"Danau Toba menarik karena berbagai faktor. Pertama, sebagai danau vulkanik terbesar di dunia, ia menawarkan pemandangan alam yang luar biasa dan sejarah geologis yang mendalam. Kedalaman maksimalnya mencapai 505 meter dan luasnya mencapai 1.130 kilometer persegi juga menambah keindahannya.
+
+Selain itu, Danau Toba memiliki ekosistem yang unik, termasuk fitoplankton, makrofita, dan hutan hujan tropis di sekitarnya. Ia juga rumah bagi beberapa spesies ikan endemik seperti Rasbora tobana dan Neolissochilus thienemanni.
+
+Danau ini juga memiliki nilai budaya dan legenda, seperti cerita tentang seorang nelayan dan ikan mas yang dipercaya sebagai asal-usul Pulau Samosir. 
+
+Selain itu, Danau Toba memiliki potensi pariwisata yang besar. Ia telah diakui sebagai Geopark Dunia UNESCO dan merupakan destinasi pariwisata prioritas nasional Indonesia. Terdapat banyak pulau dan destinasi wisata di sekitarnya, seperti Pulau Komodo dan Pulau Rinca, serta berbagai pantai indah dan gua.
+
+Namun, pertumbuhan pariwisata juga membawa dampak negatif seperti peningkatan sampah, kerusakan lingkungan, konflik sosial, dan ketimpangan ekonomi. Meski begitu, Danau Toba tetap menawarkan keindahan alam dan sejarah yang tak ternilai harganya.","Danau Toba menarik karena statusnya sebagai geopark dunia UNESCO, keindahan kaldera vulkanik yang luar biasa, serta budayanya yang kaya. Selain itu, pulau-pulau di dalam danau seperti Samosir menawarkan pengalaman wisata budaya yang unik."
+q3,WEATHER,Apakah hari ini hujan di Bandung?,TIE,62.05,1,1,3.5,3.0,3.5,4.0,3.5,3.5,3.0,3.5,4.0,3.5,62.5,50.0,62.5,75.0,62.5,62.5,50.0,62.5,75.0,62.5,A,0.9,"Jawaban A lebih akurat dan lebih grounded pada context, dengan informasi yang lebih lengkap, jelas, dan bertanggung jawab.",False,0,True,2,A,0.9,"Jawaban A lebih akurat dan lebih grounded pada context, serta lebih bertanggung jawab terhadap intent pengguna.",False,0,True,2,"Halo! Selamat datang. Berikut adalah prakiraan cuaca terkini di Bandung:
+
+Kondisi Cuaca Terkini:
+- **Status Cuaca**: Kabut/Asap
+- **Suhu Udara**: 19°C
+- **Kelembaban**: 99%
+- **Kecepatan Angin**: 0.5 km/jam
+
+Rekomendasi Praktis Wisatawan:
+- **Pakaian yang Cocok**: Sebaiknya pakailah pakaian yang dapat menyerap air dan mempertahankan panas tubuh, seperti jaket hujan atau sweater. Pakaian yang dapat menahan kelembaban sangat penting karena cuaca masih dalam kondisi kabut atau asap.
+- **Perlengkapan Wajib**: Pastikan untuk membawa payung atau perlengkapan lain yang dapat melindungi Anda dari hujan jika cuaca berubah. Selain itu, masker juga harus dipertimbangkan karena kondisi cuaca yang bisa menyebabkan peningkatan asap atau kabut.
+
+Harap diingat bahwa cuaca dapat berubah sewaktu-waktu, jadi selalu cek update terbaru sebelum berpergian.","Halo! Selamat datang di layanan prakiraan cuaca BMKG untuk **Bandung**. Berikut kondisi cuaca terkini:
+
+Kondisi Cuaca Terkini:
+- **Status Cuaca**: Kabut/Asap
+- **Suhu Udara**: 19°C
+- **Kelembaban**: 99%
+- **Kecepatan Angin**: 0.5 knots
+- **Visibilitas**: < 500.0 m
+
+Rekomendasi Praktis Wisatawan:
+- **Pakaian yang Cocok**: Pakaian hangat atau jaket tebal sangat disarankan karena suhu cukup dingin
+- **Perlengkapan Wajib**: masker untuk melindungi dari polutan, kacamata jika berkendara
+
+Semoga aktivitas Anda di **Bandung** menyenangkan dan tetap aman! 🌤️"
+q4,FLIGHT,Cari tiket ke Bali,TIE,98.615,1,1,3.5,3.0,4.0,4.0,3.5,3.0,3.0,4.0,4.0,3.0,62.5,50.0,75.0,75.0,62.5,50.0,50.0,75.0,75.0,50.0,A,1.0,"Jawaban A lebih akurat, lebih grounded, lengkap, jelas, dan lebih membantu dari jawaban B. Jawaban B mengandung halusinasi, seperti menggambarkan pesawat yang tidak terdapat dalam context.",False,0,True,2,A,1.0,"Jawaban A lebih akurat, lebih grounded, lengkap, jelas, dan lebih membantu dari jawaban B. Jawaban B mengandung informasi yang tidak didukung oleh context.",False,0,True,2,"Pesawat yang tersedia dari Bandara (masukkan nama bandara asal) ke Bandara (masukkan nama bandara tujuan) pada tanggal (masukkan tanggal) ada 10 penerbangan:
+
+- **Lion (JT 20)**
+  Jam: 04:30 - 07:25
+  Kelas: -
+  Harga: Rp 3.312.300
+  Detail: Menggunakan pesawat -, Informasi tambahan tidak tersedia
+
+- **Lion (JT 30)**
+  Jam: 08:20 - 11:15
+  Kelas: -
+  Harga: Rp 3.312.300
+  Detail: Menggunakan pesawat -, Informasi tambahan tidak tersedia
+
+- **Lion (JT 34)**
+  Jam: 09:40 - 12:35
+  Kelas: -
+  Harga: Rp 3.312.300
+  Detail: Menggunakan pesawat -, Informasi tambahan tidak tersedia
+
+- **Lion (JT 24)**
+  Jam: 11:10 - 14:05
+  Kelas: -
+  Harga: Rp 3.312.300
+  Detail: Menggunakan pesawat -, Informasi tambahan tidak tersedia
+
+- **Lion (JT 12)**
+  Jam: 17:40 - 20:35
+  Kelas: -
+  Harga: Rp 3.312.300
+  Detail: Menggunakan pesawat -, Informasi tambahan tidak tersedia
+
+- **TransNusa (8B 5104)**
+  Jam: 07:10 - 09:45
+  Kelas: -
+  Harga: Rp 3.525.811
+  Detail: Menggunakan pesawat -, Estimasi emisi karbon, Hiburan di pesawat tersedia
+
+- **TransNusa (8B 5106)**
+  Jam: 10:30 - 13:20
+  Kelas: -
+  Harga: Rp 3.525.811
+  Detail: Menggunakan pesawat -, Estimasi emisi karbon, Hiburan di pesawat tersedia
+
+- **TransNusa (8B 5108)**
+  Jam: 15:10 - 18:00
+  Kelas: -
+  Harga: Rp 3.525.811
+  Detail: Menggunakan pesawat -, Estimasi emisi karbon, Hiburan di pesawat tersedia
+
+- **TransNusa (8B 5110)**
+  Jam: 19:30 - 22:20
+  Kelas: -
+  Harga: Rp 3.525.811
+  Detail: Menggunakan pesawat -, Estimasi emisi karbon, Hiburan di pesawat tersedia
+
+- **Indonesia AirAsia (QZ 800)**
+  Jam: 21:20 - 00:05
+  Kelas: -
+  Harga: Rp 3.574.741
+  Detail: Menggunakan pesawat -, Estimasi emisi karbon, Ruang kaki standar","Pesawat yang tersedia dari Bandara YIA ke Bandara DSY pada tanggal 2026-09-10 - 2026-09-11 terdapat 10 penerbangan:- **Lion (JT 20)** Jam: 04:30 - 07:25 Kelas: Economy Harga: Rp 3.312.300 Detail: Menggunakan pesawat Airbus A320, Legroom rata-rata, Estimasi emisi karbon: 107 kg- **Lion (JT 30)** Jam: 08:20 - 11:15 Kelas: Economy Harga: Rp 3.312.300 Detail: Menggunakan pesawat Airbus A320, Legroom rata-rata, Estimasi emisi karbon: 107 kg- **Lion (JT 34)** Jam: 09:40 - 12:35 Kelas: Economy Harga: Rp 3.312.300 Detail: Menggunakan pesawat Airbus A320, Legroom rata-rata, Estimasi emisi karbon: 107 kg- **Lion (JT 24)** Jam: 11:10 - 14:05 Kelas: Economy Harga: Rp 3.312.300 Detail: Menggunakan pesawat Airbus A320, Legroom rata-rata, Estimasi emisi karbon: 107 kg- **Lion (JT 12)** Jam: 17:40 - 20:35 Kelas: Economy Harga: Rp 3.312.300 Detail: Menggunakan pesawat Airbus A320, Legroom rata-rata, Estimasi emisi karbon: 107 kg- **TransNusa (8B 5104)** Jam: 07:10 - 09:45 Kelas: Economy Harga: Rp 3.525.811 Detail: Menggunakan pesawat Boeing 737 MAX, Below average legroom (111 cm), Estimasi emisi karbon: 96 kg- **TransNusa (8B 5106)** Jam: 10:30 - 13:20 Kelas: Economy Harga: Rp 3.525.811 Detail: Menggunakan pesawat Boeing 737 MAX, Below average legroom (111 cm), Estimasi emisi karbon: 96 kg- **TransNusa (8B 5108)** Jam: 15:10 - 18:00 Kelas: Economy Harga: Rp 3.525.811 Detail: Menggunakan pesawat Boeing 737 MAX, Below average legroom (111 cm), Estimasi emisi karbon: 96 kg- **TransNusa (8B 5110)** Jam: 19:30 - 22:20 Kelas: Economy Harga: Rp 3.525.811 Detail: Menggunakan pesawat Boeing 737 MAX, Below average legroom (111 cm), Estimasi emisi karbon: 96 kg- **Indonesia AirAsia (QZ 800)** Jam: 21:20 - 00:05 Kelas: Economy Harga: Rp 3.574.741 Detail: Menggunakan pesawat Airbus A320neo, Legroom rata-rata, Estimasi emisi karbon: 112 kg"
+q5,HOTEL,Cari hotel di Bali,TIE,129.645,1,1,3.0,3.0,4.0,4.5,3.0,3.5,3.0,4.0,4.5,3.5,50.0,50.0,75.0,87.5,50.0,62.5,50.0,75.0,87.5,62.5,A,1.0,"Jawaban A lebih akurat, lebih grounded, lengkap, jelas, dan lebih membantu dari jawaban B. Jawaban B mengandung halusinasi, seperti tidak menyediakan waktu check-in dan check-out.",False,0,True,2,A,1.0,"Jawaban A lebih akurat, lebih grounded, lengkap, jelas, dan lebih membantu dari jawaban B. Jawaban B mengandung halusinasi, seperti mengubah harga per malam menjadi harga total tanpa menghitung total harga.",False,0,True,2,"Berikut adalah beberapa rekomendasi hotel di Bali:
+
+Hotel yang tersedia ada 10:
+
+**Eden Hotel Kuta Bali**
+Rating: 4.2/5 ([3892] ulasan)
+Estimasi Harga per Malam: Rp 2.218.630
+Total Harga: Rp 11.095.190
+Waktu Check-In: 14.00
+Waktu Check-Out: 12.00
+Fasilitas: Sarapan, Free Wi-Fi, Free parking, Outdoor pool, Air conditioning
+Tempat Terdekat: Waterbom Bali, Kuta Lippo Mall, Lion Air Group Bandara Internasional I Gusti Ngurah Rai
+
+**Kuta Beach Hotel**
+Rating: 4.2/5 ([2493] ulasan)
+Estimasi Harga per Malam: Rp 3.688.610
+Total Harga: Rp 18.443.070
+Waktu Check-In: 15.00
+Waktu Check-Out: 12.00
+Fasilitas: Sarapan (berbayar), Free Wi-Fi, Free parking, Outdoor pool, Air conditioning
+Tempat Terdekat: Pantai Kuta, Kuta Beachwalk Mall, Lion Air Group Bandara Internasional I Gusti Ngurah Rai
+
+**favehotel - Kartika Plaza Kuta**
+Rating: 4.6/5 ([3853] ulasan)
+Estimasi Harga per Malam: Rp 3.767.910
+Total Harga: Rp 18.839.540
+Fasilitas: Sarapan, Free Wi-Fi, Free parking, Outdoor pool, Air conditioning
+Tempat Terdekat: Waterbom Bali, Kuta Lippo Mall, Lion Air Group Bandara Internasional I Gusti Ngurah Rai
+
+**Singaraja Beach Hotel**
+Rating: 4.3/5 ([3694] ulasan)
+Estimasi Harga per Malam: Rp 1.800.000
+Total Harga: Rp 9.000.000
+Fasilitas: Free breakfast, Free Wi-Fi, Free parking, Outdoor pool, Air conditioning
+Tempat Terdekat: Lion Air Group Bandara Internasional I Gusti Ngurah Rai, OTeWe Resto & Kopi
+
+**Prasi Sunset Bungalows - Bungalow with Ocean View**
+Rating: 4.75/5 ([8] ulasan)
+Estimasi Harga per Malam: Rp 3.053.630
+Total Harga: Rp 15.268.170
+Fasilitas: Ber-AC, Jemputan bandara, Dapur, Kolam renang luar, Bebas asap rokok
+Tempat Terdekat: Lion Air Group Bandara Internasional I Gusti Ngurah Rai
+
+**Quest Hotel San Denpasar**
+Rating: 4.8/5 ([14799] ulasan)
+Estimasi Harga per Malam: Rp 3.832.910
+Total Harga: Rp 19.164.550
+Fasilitas: Sarapan (berbayar), Free Wi-Fi, Free parking, Outdoor pool, Air conditioning
+Tempat Terdekat: Lion Air Group Bandara Internasional I Gusti Ngurah Rai, WISTARA FAMILY CAFE
+
+**Kuta Central Park Hotel Bali**
+Rating: 4.2/5 ([4507] ulasan)
+Estimasi Harga per Malam: Rp 2.594.700
+Total Harga: Rp 12.973.500
+Fasilitas: Sarapan, Free Wi-Fi, Free parking, Outdoor pool, Hot tub
+Tempat Terdekat: Seminyak, Kuta Central Parkir, Lion Air Group Bandara Internasional I Gusti Ngurah Rai
+
+**Collection O Sanur Near Bali Exotic Marine Park - Deluxe Twin Room**
+Rating: 2.9/5 ([7] ulasan)
+Estimasi Harga per Malam: Rp 2.791.680
+Total Harga: Rp 13.958.410
+Fasilitas: Ber-AC, Cocok untuk anak, Ranjang bayi, Kolam renang luar, Bebas asap rokok
+Tempat Terdekat: 
+
+**Woodstock Guesthouse in Bali**
+Rating: Belum ada rating ([null] ulasan)
+Estim","Berikut adalah beberapa rekomendasi hotel di Bali
+Hotel yang tersedia ada 10:
+
+- **Eden Hotel Kuta Bali**
+  Rating: 4.2 (3892 ulasan)
+  Estimasi Harga per Malam: Rp 221.904
+  Total Harga: Rp 1.109.519
+  Waktu Check-In: 14.00
+  Waktu Check-Out: 12.00
+  Fasilitas: Sarapan, Free Wi-Fi, Free parking, Outdoor pool, Air conditioning
+  Tempat Terdekat: Waterbom Bali, Kuta Lippo Mall, Lion Air Group Bandara Internasional I Gusti Ngurah Rai
+
+- **Kuta Beach Hotel**
+  Rating: 4.2 (2493 ulasan)
+  Estimasi Harga per Malam: Rp 368.861
+  Total Harga: Rp 1.844.307
+  Waktu Check-In: 15.00
+  Waktu Check-Out: 12.00
+  Fasilitas: Sarapan (berbayar), Free Wi-Fi, Free parking, Outdoor pool, Air conditioning
+  Tempat Terdekat: Pantai Kuta, Kuta Beachwalk Mall, Lion Air Group Bandara Internasional I Gusti Ngurah Rai
+
+- **favehotel - Kartika Plaza Kuta**
+  Rating: 4.6 (3853 ulasan)
+  Estimasi Harga per Malam: Rp 376.791
+  Total Harga: Rp 1.883.954
+  Waktu Check-In: Belum ada waktu
+  Waktu Check-Out: Belum ada waktu
+  Fasilitas: Sarapan, Free Wi-Fi, Free parking, Outdoor pool, Air conditioning
+  Tempat Terdekat: Waterbom Bali, Kuta Lippo Mall, Lion Air Group Bandara Internasional I Gusti Ngurah Rai
+
+- **Singaraja Beach Hotel**
+  Rating: 4.3 (3694 ulasan)
+  Estimasi Harga per Malam: Rp 180.000
+  Total Harga: Rp 900.000
+  Waktu Check-In: 14.00
+  Waktu Check-Out: 12.00
+  Fasilitas: Free breakfast, Free Wi-Fi, Free parking, Outdoor pool, Air conditioning
+  Tempat Terdekat: Lion Air Group Bandara Internasional I Gusti Ngurah Rai, OTeWe Resto & Kopi
+
+- **Prasi Sunset Bungalows - Bungalow with Ocean View**
+  Rating: 4.75 (8 ulasan)
+  Estimasi Harga per Malam: Rp 305.363
+  Total Harga: Rp 1.526.817
+  Waktu Check-In: 12.00
+  Waktu Check-Out: 10.00
+  Fasilitas: Ber-AC, Jemputan bandara, Dapur, Kolam renang luar, Bebas asap rokok
+  Tempat Terdekat: Lion Air Group Bandara Internasional I Gusti Ngurah Rai
+
+- **Quest Hotel San Denpasar**
+  Rating: 4.8 (14799 ulasan)
+  Estimasi Harga per Malam: Rp 383.291
+  Total Harga: Rp 1.916.455
+  Waktu Check-In: 14.00
+  Waktu Check-Out: 12.00
+  Fasilitas: Sarapan (berbayar), Free Wi-Fi, Free parking, Outdoor pool, Air conditioning
+  Tempat Terdekat: Lion Air Group Bandara Internasional I Gusti Ngurah Rai, WISTARA FAMILY CAFE
+
+- **Kuta Central Park Hotel Bali**
+  Rating: 4.2 (4507 ulasan)
+  Estimasi Harga per Malam: Rp 259.470
+  Total Harga: Rp 1.297.350
+  Waktu Check-In: 15.00
+  Waktu Check-Out: 12.00
+  Fasilitas: Sarapan, Free Wi-Fi, Free parking, Outdoor pool, Hot tub
+  Tempat Terdekat: Seminyak, Kuta Central Parkir, Lion Air Group Bandara Internasional I Gusti Ngurah Rai
+
+-"
