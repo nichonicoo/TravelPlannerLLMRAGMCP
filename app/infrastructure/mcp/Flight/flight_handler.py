@@ -114,6 +114,8 @@ class FlightHandler:
             "status": "OK",
             "data": {
                 "offers": result.get("offers", []),
+                "departure_date": params.get("outbound_date"),
+                "arrival_date": params.get("return_date"),
                 "params": params
             },
             "meta": {

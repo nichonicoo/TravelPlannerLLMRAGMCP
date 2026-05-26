@@ -39,7 +39,8 @@ def search_hotel(params: dict) -> dict:
         return {
             "status": "OK",
             "properties": response.get("properties", []),
-            "property": response.get("property", {})
+            "property": response.get("property", {}),
+            "search_parameters": response.get("search_parameters", {})
         }
 
     except Exception as e:

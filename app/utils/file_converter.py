@@ -1,6 +1,6 @@
 import json
-from pathlib import Path
 import pandas as pd
+from pathlib import Path
 
 
 def import_excel_to_json(excel_path: Path, json_path: Path) -> None:
@@ -17,15 +17,27 @@ def import_excel_to_json(excel_path: Path, json_path: Path) -> None:
     for _, row in df.iterrows():
         row_dict = row.to_dict()
 
-        # Core top-level fields only
+        # Ambil core fields dasar termasuk status, context, dan tool_result
         record = {
-            "id": str(row_dict.get("id", "")).strip(),
-            "intent": str(row_dict.get("intent", "")).strip(),
-            "question": str(row_dict.get("question", "")).strip(),
+            "id": str(row_dict.get("id", "")).strip() if row_dict.get("id") else None,
+            "intent": str(row_dict.get("intent", "")).strip() if row_dict.get("intent") else None,
+            "question": str(row_dict.get("question", "")).strip() if row_dict.get("question") else None,
             "params": {},
+            "status": row_dict.get("status"),
+            "context": row_dict.get("context"),
+            "tool_result": row_dict.get("tool_result"),
         }
 
-        # Replace the param loop inside import_excel_to_json with this:
+        # Jika tool_result di Excel berupa string berformat JSON, pastikan saat di-export ke JSON murni,
+        # kita simpan sesuai format aslinya (bisa berupa string JSON lagi agar konsisten dengan data awal Anda)
+        if isinstance(record["tool_result"], str):
+            try:
+                # Validasi apakah ini string JSON yang valid
+                json.loads(record["tool_result"])
+            except Exception:
+                pass  # Jika bukan JSON valid, biarkan sebagai string biasa
+
+        # Memasukkan semua kolom berawalan param_ ke dalam objek params
         for key, value in row_dict.items():
             if key.startswith("param_") and value is not None:
                 json_param_key = key.replace("param_", "", 1)
@@ -68,13 +80,34 @@ def export_json_to_excel(json_path: Path, excel_path: Path) -> None:
     flat_records = []
 
     for item in json_data:
+        # Ambil kolom utama termasuk status dan context
         flat_item = {
             "id": item.get("id"),
             "intent": item.get("intent"),
             "question": item.get("question"),
+            "status": item.get("status"),
+            "context": item.get("context"),
         }
 
         # Flatten nested params back into 'param_*' columns
+        tool_res = item.get("tool_result")
+        if tool_res:
+            if isinstance(tool_res, str):
+                try:
+                    # Jika berupa string JSON, kita parse lalu dump lagi dengan indentasi
+                    parsed_tool = json.loads(tool_res)
+                    flat_item["tool_result"] = json.dumps(
+                        parsed_tool, indent=2, ensure_ascii=False)
+                except Exception:
+                    flat_item["tool_result"] = tool_res
+            else:
+                # Jika kebetulan sudah berupa dict/list dari sistem
+                flat_item["tool_result"] = json.dumps(
+                    tool_res, indent=2, ensure_ascii=False)
+        else:
+            flat_item["tool_result"] = None
+
+        # Flatten nested params menjadi kolom 'param_*'
         params = item.get("params", {})
         if isinstance(params, dict):
             for p_key, p_val in params.items():
@@ -86,13 +119,16 @@ def export_json_to_excel(json_path: Path, excel_path: Path) -> None:
 
     df = pd.DataFrame(flat_records)
 
-    # Enforce column order: id, intent, question, then all param_ columns
-    core_cols = ["id", "intent", "question"]
+    # Urutan kolom di Excel: id, intent, question, status, context, tool_result, lalu param_*
+    core_cols = ["id", "intent", "question",
+                 "status", "context", "tool_result"]
     param_cols = [col for col in df.columns if col.startswith("param_")]
     ordered_columns = core_cols + sorted(param_cols)
 
-    # Reindex dataframe to guarantee Excel layout matches your preference
+    # Reindex dataframe
     df = df.reindex(columns=ordered_columns)
+
+    # Simpan ke Excel
     df.to_excel(excel_path, index=False)
 
 
