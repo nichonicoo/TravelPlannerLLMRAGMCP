@@ -13,6 +13,7 @@ class Settings:
     PROJECT_ROOT = Path(__file__).parent.parent.parent
     EVALS_DIR = PROJECT_ROOT / "evals"
 
+    LLM_GENERATION_MODE = os.getenv("LLM_GENERATION_MODE", "benchmark")
     LLM_PROVIDER = os.getenv("LLM_PROVIDER", "hf")
 
     # hf config

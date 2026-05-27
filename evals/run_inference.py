@@ -142,17 +142,28 @@ async def main():
 
                 # Execution Timing Block
                 start_time = time.perf_counter()
-                response = await llm.generate(messages)
-                latency = time.perf_counter() - start_time
+                
+                # Capture the complete metrics payload dict from provider
+                gen_payload = await llm.generate(messages, mode=settings.LLM_GENERATION_MODE)
+                
+                total_latency = time.perf_counter() - start_time
 
-                data["response"] = response
-                data["latency"] = round(latency, 3)
+                # Map metrics directly to output fields
+                data["response"] = gen_payload["response"]
+                data["latency"] = round(total_latency, 3)
+                data["ttft_sec"] = gen_payload["ttft_sec"]
+                data["throughput_tok_sec"] = gen_payload["throughput_tok_sec"]
+                data["avg_token_confidence"] = gen_payload["avg_token_confidence"]
+                data["avg_token_entropy"] = gen_payload["avg_token_entropy"]
                 data["inference_status"] = "SUCCESS"
 
             except Exception as runtime_error:
                 data["response"] = None
-                data["latency"] = round(
-                    time.perf_counter() - start_time, 3) if 'start_time' in locals() else 0.0
+                data["latency"] = round(time.perf_counter() - start_time, 3) if 'start_time' in locals() else 0.0
+                data["ttft_sec"] = None
+                data["throughput_tok_sec"] = None
+                data["avg_token_confidence"] = None
+                data["avg_token_entropy"] = None
                 data["inference_status"] = "GENERATION_ERROR"
                 data["error_log"] = str(runtime_error)
 
