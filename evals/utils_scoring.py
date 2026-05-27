@@ -1,5 +1,4 @@
 import json
-import re
 from pathlib import Path
 
 MAX_CONTEXT_CHARS = 8000
@@ -13,19 +12,27 @@ DIMENSIONS = [
     "helpfulness",
 ]
 
+WEIGHTS = {
+    "correctness": 0.30,
+    "groundedness": 0.30,
+    "completeness": 0.20,
+    "clarity": 0.10,
+    "helpfulness": 0.10,
+}
+
+TIE_THRESHOLD = 0.20
+
 
 def load_jsonl(path: Path) -> dict:
     """
-    Loads JSONL file into dictionary keyed by native `id`.
-
-    Raises:
-        ValueError: duplicate IDs detected
-        KeyError: missing id field
+    Loads JSONL file into dictionary keyed by record id.
     """
+
     data = {}
 
     with open(path, "r", encoding="utf-8") as f:
         for line_num, line in enumerate(f, start=1):
+
             if not line.strip():
                 continue
 
@@ -40,8 +47,7 @@ def load_jsonl(path: Path) -> dict:
 
             if record_id in data:
                 raise ValueError(
-                    f"Duplicate ID detected: {record_id} "
-                    f"in {path} line {line_num}"
+                    f"Duplicate ID detected: {record_id}"
                 )
 
             data[record_id] = item
@@ -51,7 +57,7 @@ def load_jsonl(path: Path) -> dict:
 
 def validate_pair(a: dict, b: dict, record_id: str):
     """
-    Ensures both compared samples represent identical tasks.
+    Ensures both compared records represent same task.
     """
 
     checks = [
@@ -69,7 +75,7 @@ def validate_pair(a: dict, b: dict, record_id: str):
     if mismatches:
         raise ValueError(
             f"Dataset mismatch for {record_id}. "
-            f"Mismatched fields: {', '.join(mismatches)}"
+            f"Mismatched: {', '.join(mismatches)}"
         )
 
 
@@ -101,170 +107,140 @@ def truncate_text(text: str, limit: int) -> str:
     if len(text) <= limit:
         return text
 
-    return text[:limit] + "\n...[TRUNCATED IN EVAL]..."
+    return text[:limit] + "\n...[TRUNCATED]..."
 
 
 def extract_json(text: str) -> str:
     """
-    Extracts first valid JSON object from model output.
+    Robust JSON extraction from model outputs.
     """
 
     text = text.strip()
 
     if text.startswith("```json"):
-        text = (
-            text.removeprefix("```json")
-            .removesuffix("```")
-            .strip()
-        )
+        text = text.split("```json", 1)[1]
 
-    match = re.search(r"\{.*\}", text, re.DOTALL)
+    if text.endswith("```"):
+        text = text.rsplit("```", 1)[0]
 
-    if not match:
+    text = text.strip()
+
+    start = text.find("{")
+    end = text.rfind("}")
+
+    if start == -1 or end == -1:
         raise ValueError(
-            "No JSON payload block found in model output."
+            "No JSON object found in model output."
         )
 
-    return match.group(0)
-
-
-def scale_to_percentage(score_1_to_5: float) -> float:
-    """
-    Converts 1-5 scale into 0-100 percentage scale.
-    """
-
-    try:
-        score = float(score_1_to_5)
-        score = max(1.0, min(5.0, score))
-
-        return round(((score - 1.0) / 4.0) * 100, 2)
-
-    except (ValueError, TypeError):
-        return 0.0
+    return text[start:end + 1]
 
 
 def validate_scores(scores: dict):
     """
-    Validates judge score schema integrity.
+    Validates rubric score schema integrity.
     """
 
-    for side in ["A", "B"]:
-        if side not in scores:
-            raise ValueError(f"Missing score side: {side}")
-
-        if not isinstance(scores[side], dict):
-            raise ValueError(
-                f"Scores for side '{side}' must be a dictionary."
-            )
-
-        for dim in DIMENSIONS:
-            if dim not in scores[side]:
-                raise ValueError(
-                    f"Missing dimension '{dim}' in side '{side}'"
-                )
-
-            value = scores[side][dim]
-
-            if value is None:
-                continue
-
-            try:
-                numeric = float(value)
-            except (TypeError, ValueError):
-                raise ValueError(
-                    f"Invalid numeric value for "
-                    f"{side}.{dim}: {value}"
-                )
-
-            if numeric < 1 or numeric > 5:
-                raise ValueError(
-                    f"Out-of-range score for "
-                    f"{side}.{dim}: {numeric}"
-                )
-
-
-def average_scores(results: list, side: str) -> dict:
-    """
-    Averages metric layers across multiple judge passes.
-    """
-
-    averaged = {}
+    if not isinstance(scores, dict):
+        raise ValueError("Scores must be a dictionary.")
 
     for dim in DIMENSIONS:
-        vals = []
 
-        for r in results:
-            try:
-                val = r["scores"][side][dim]
+        if dim not in scores:
+            raise ValueError(
+                f"Missing dimension: {dim}"
+            )
 
-                if val is not None:
-                    vals.append(float(val))
+        value = scores[dim]
 
-            except (KeyError, TypeError, ValueError):
-                continue
+        try:
+            numeric = int(value)
 
-        averaged[dim] = (
-            round(sum(vals) / len(vals), 2)
-            if vals
-            else None
+        except (ValueError, TypeError):
+            raise ValueError(
+                f"Invalid score for {dim}: {value}"
+            )
+
+        if numeric < 1 or numeric > 5:
+            raise ValueError(
+                f"Out-of-range score for {dim}: {numeric}"
+            )
+
+
+def compute_weighted_score(scores: dict) -> float:
+    """
+    Computes weighted aggregate rubric score.
+    """
+
+    total = 0.0
+
+    for dim, weight in WEIGHTS.items():
+        total += float(scores[dim]) * weight
+
+    return round(total, 3)
+
+
+def apply_hallucination_penalty(
+    score: float,
+    hallucination: dict,
+) -> float:
+    """
+    Applies penalties for hallucinated content.
+    """
+
+    if hallucination.get("detected"):
+
+        severity = int(
+            hallucination.get("severity", 0)
         )
 
-    return averaged
+        penalties = {
+            0: 0.0,
+            1: 0.25,
+            2: 0.75,
+            3: 1.50,
+        }
+
+        score -= penalties.get(severity, 0)
+
+    return round(max(score, 1.0), 3)
 
 
-def normalize_winner(winner: str, swapped: bool) -> str:
+def scale_to_percentage(score_1_to_5: float) -> float:
     """
-    Normalizes winner labels during swap evaluation.
-    """
-
-    if not winner:
-        return "TIE"
-
-    winner = str(winner).strip().upper()
-
-    if winner not in {"A", "B"}:
-        return "TIE"
-
-    if not swapped:
-        return winner
-
-    return "B" if winner == "A" else "A"
-
-
-def remap_scores(scores: dict) -> dict:
-    """
-    Swaps score orientation after inverted evaluation pass.
+    Converts 1-5 scale into percentage.
     """
 
-    return {
-        "A": scores.get("B", {}),
-        "B": scores.get("A", {}),
-    }
+    score = max(1.0, min(5.0, float(score_1_to_5)))
+
+    return round(
+        ((score - 1.0) / 4.0) * 100,
+        2,
+    )
 
 
-def determine_consensus_winner(votes: list[str]) -> str:
+def determine_winner(
+    base_score: float,
+    qlora_score: float,
+) -> tuple[str, float]:
     """
-    Requires strict agreement across passes.
-
-    Examples:
-        ["A", "A"] -> "A"
-        ["B", "B"] -> "B"
-        ["A", "B"] -> "TIE"
+    Determines winner using tie threshold.
     """
 
-    normalized = [str(v).upper() for v in votes]
+    delta = abs(base_score - qlora_score)
 
-    if all(v == "A" for v in normalized):
-        return "A"
+    if delta <= TIE_THRESHOLD:
+        return "TIE", delta
 
-    if all(v == "B" for v in normalized):
-        return "B"
+    if base_score > qlora_score:
+        return "BASE", delta
 
-    return "TIE"
+    return "QLORA", delta
+
 
 def is_success(item: dict) -> bool:
     """
-    Normalizes operational success detection across pipelines.
+    Normalizes operational success detection.
     """
 
     inference_status = str(
