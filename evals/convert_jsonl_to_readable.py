@@ -9,9 +9,9 @@ from app.core.settings import settings
 # Configurable Paths
 # =========================
 JSONL_PATH = settings.EVALS_DIR / "5_judge" / "judge_eval.jsonl"
-JSON_OUTPUT = settings.EVALS_DIR / "6_readable" / "results_pretty.json"
-CSV_OUTPUT = settings.EVALS_DIR / "6_readable" / "results.csv"
-EXCEL_OUTPUT = settings.EVALS_DIR / "6_readable" / "results.xlsx"
+JSON_OUTPUT = settings.EVALS_DIR / "readable" / "results_pretty.json"
+CSV_OUTPUT = settings.EVALS_DIR / "readable" / "results.csv"
+EXCEL_OUTPUT = settings.EVALS_DIR / "readable" / "results.xlsx"
 
 
 def flatten_record(record):

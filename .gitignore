@@ -53,4 +53,9 @@ chroma/
 
 # Evals
 evals/4_runs/*
+evals/5_judge/*
+evals/6_results/*
+
 !evals/4_runs/.gitkeep
+!evals/5_judge/.gitkeep
+!evals/6_results/.gitkeep
