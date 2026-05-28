@@ -28,12 +28,18 @@ class WeatherHandler:
         - ERROR
         """
         query = params.get("query", "")
+        explicit_location = params.get("location")
 
-        # 1. Technical logic
-        loc = self.resolver.getLocation(query)
+        if explicit_location:
+            loc = self.resolver.getLocation(explicit_location, force=True)
+        else:
+            loc = self.resolver.getLocation(query)
 
         if loc["status"] == "NOT_FOUND":
-            return {"status": "NOT_FOUND", "error": "Location not found in BMKG database"}
+            return {
+                "status": "NOT_FOUND",
+                "error": "Location not found in BMKG database"
+            }
 
         if loc["status"] == "AMBIGUOUS":
             return {
@@ -45,7 +51,6 @@ class WeatherHandler:
                 }
             }
 
-        # 2. API logic
         data = self.client.get_bmkg_weather(loc["adm4"])
 
         if "error" in data:

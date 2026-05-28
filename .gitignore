@@ -52,5 +52,14 @@ chroma/
 *.sqlite3
 
 # Evals
-evals/4_runs/*
-!evals/4_runs/.gitkeep
+evals/2_processed/
+evals/3_enriched/
+evals/4_runs/
+evals/5_judge/
+evals/6_results/
+evals/readable/
+
+evals/1_inputs/*
+
+!evals/1_inputs/excel/
+!evals/*/.gitkeep

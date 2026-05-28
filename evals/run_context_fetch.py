@@ -7,7 +7,7 @@ from app.infrastructure.rag.rag_pipeline import RAGEngine
 from app.infrastructure.mcp.mcp_manager import MCPManager
 from evals.utils_context import build_mcp_params, build_mcp_context
 
-INPUT_FILE = settings.EVALS_DIR / "2_processed/jsonl/test_dataset.jsonl"
+INPUT_FILE = settings.EVALS_DIR / "2_processed/jsonl/test_dataset_50.jsonl"
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 OUTPUT_FILE = settings.EVALS_DIR / "3_enriched" / f"context_prepared_{timestamp}.jsonl"
 

@@ -12,25 +12,39 @@ class BMKGClient:
         Fetch prakiraan cuaca BMKG berdasarkan kode wilayah adm4
         Contoh: 31.71.03.1001 (Kelurahan Kemayoran)
         """
-        
-        params = {
-            "adm4": adm4_code
-        }
+
+        params = {"adm4": adm4_code}
         print('param: ', params)
-        
-        try: 
+
+        try:
             r = requests.get(self.base_url, params=params, timeout=self.timeout)
-            r.raise_for_status()
+
+            if r.status_code != 200:
+                return {
+                    "error": f"HTTP {r.status_code}",
+                    "source": "BMKG"
+                }
+
             data = r.json()
-            
-            # Ambil 1 hari pertama (8 data / 3 jam)
-            forecasts = data["data"][0]["cuaca"][0]
-            
-            # Ambil kondisi TERDEKAT
-            current = forecasts[0]
-            
-            return{
-                "source": "BMKG (Badan Meteorologi, Klimatologi, dan Geofisika)",
+
+            if not data.get("data"):
+                return {
+                    "error": "Empty BMKG data",
+                    "source": "BMKG"
+                }
+
+            forecasts = data["data"][0].get("cuaca")
+
+            if not forecasts:
+                return {
+                    "error": "No forecast data",
+                    "source": "BMKG"
+                }
+
+            current = forecasts[0][0]
+
+            return {
+                "source": "BMKG",
                 "location_code": adm4_code,
                 "analysis_date": current.get("analysis_date"),
                 "local_datetime": current.get("local_datetime"),
@@ -40,6 +54,7 @@ class BMKGClient:
                 "wind_speed_kmh": current.get("ws"),
                 "visibility": current.get("vs_text")
             }
+
         except Exception as e:
             return {
                 "error": str(e),
