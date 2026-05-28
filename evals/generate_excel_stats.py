@@ -54,18 +54,18 @@ def aggregate_eval_to_excel(
         intent_raw = judge.get("intent") or b_raw.get("intent") or b_anl.get("intent") or "UNKNOWN"
         intent = intent_raw.upper()
         
-        # --- Solusi: Ambil sub-dictionary bersarang dari LLM Judge ---
-        base_metrics = judge.get("raw_average_scores", {}).get("base_model_1_to_5", {})
-        qlora_metrics = judge.get("raw_average_scores", {}).get("qlora_model_1_to_5", {})
+        # --- PERBAIKAN: Jalur ekstraksi datar sesuai struktur judge_eval.json ---
+        base_metrics = judge.get("base_metrics", {})
+        qlora_metrics = judge.get("qlora_metrics", {})
         
-        base_pct = judge.get("normalized_metrics", {}).get("base_model_percentages", {})
-        qlora_pct = judge.get("normalized_metrics", {}).get("qlora_model_percentages", {})
+        base_score_pct = judge.get("base_score_percent")
+        qlora_score_pct = judge.get("qlora_score_percent")
         
-        # Ambil tingkat keparahan halusinasi dari Pass Evaluasi Pertama
-        base_hal_sev = judge.get("individual_passes", {}).get("pass_1_base_first", {}).get("hallucination_analysis", {}).get("A", {}).get("severity", 0)
-        qlora_hal_sev = judge.get("individual_passes", {}).get("pass_1_base_first", {}).get("hallucination_analysis", {}).get("B", {}).get("severity", 0)
+        # Ambil tingkat keparahan halusinasi secara aman dari root object
+        base_hal_sev = judge.get("base_hallucination", {}).get("severity", 0) if judge.get("base_hallucination") else 0
+        qlora_hal_sev = judge.get("qlora_hallucination", {}).get("severity", 0) if judge.get("qlora_hallucination") else 0
         
-        # Mengambil nilai dimensi individual
+        # Mengambil nilai dimensi individual (1-5)
         b_corr = base_metrics.get("correctness")
         b_grou = base_metrics.get("groundedness")
         b_comp = base_metrics.get("completeness")
@@ -78,20 +78,16 @@ def aggregate_eval_to_excel(
         q_clar = qlora_metrics.get("clarity")
         q_help = qlora_metrics.get("helpfulness")
         
-        # Hitung rata-rata Nilai Weighted Score secara manual jika tidak ada key tunggal
-        # (Menghindari bias jika ada baris data kosong)
+        # Hitung rata-rata Nilai Weighted Score secara manual (Mengabaikan nilai None)
         b_weights = [v for v in [b_corr, b_grou, b_comp, b_clar, b_help] if v is not None]
         base_score_weighted = sum(b_weights) / len(b_weights) if b_weights else None
         
         q_weights = [v for v in [q_corr, q_grou, q_comp, q_clar, q_help] if v is not None]
         qlora_score_weighted = sum(q_weights) / len(q_weights) if q_weights else None
         
-        # Hitung rata-rata Nilai Persentase Score secara manual
-        b_pcts = [v for v in [base_pct.get("correctness"), base_pct.get("groundedness"), base_pct.get("completeness"), base_pct.get("clarity"), base_pct.get("helpfulness")] if v is not None]
-        base_score_pct = sum(b_pcts) / len(b_pcts) if b_pcts else None
-        
-        q_pcts = [v for v in [qlora_pct.get("correctness"), qlora_pct.get("groundedness"), qlora_pct.get("completeness"), qlora_pct.get("clarity"), qlora_pct.get("helpfulness")] if v is not None]
-        qlora_score_pct = sum(q_pcts) / len(q_pcts) if q_pcts else None
+        # Ekstraksi jumlah token alternatif
+        base_tokens = b_raw.get("response_tokens_count") or b_anl.get("response_tokens_count", 0)
+        qlora_tokens = q_raw.get("response_tokens_count") or q_anl.get("response_tokens_count", 0)
 
         rows.append({
             "ID": record_id,
@@ -108,11 +104,13 @@ def aggregate_eval_to_excel(
             "Base_Clarity": b_clar,
             "Base_Helpfulness": b_help,
             "Base_Hallucination_Severity": base_hal_sev,
+            "Base_Has_Hallucination": 1 if base_hal_sev > 0 else 0,
             
-            # Performa dari base.jsonl / base_analysis.jsonl (Fungsi Coalesce)
-            "Base_Latency_Sec": b_raw.get("latency") or b_anl.get("latency"),
+            # Performa dengan Coalesce + fallback dari log judge jika file run kosong
+            "Base_Latency_Sec": b_raw.get("latency") or b_anl.get("latency") or judge.get("judge_latency_sec_base"),
             "Base_TTFT_Sec": b_raw.get("ttft_sec") or b_anl.get("ttft_sec"),
             "Base_Throughput_TokSec": b_raw.get("throughput_tok_sec") or b_anl.get("throughput_tok_sec"),
+            "Base_Token_Count": base_tokens,
             "Base_Token_Confidence": b_anl.get("avg_token_confidence"),
             "Base_Token_Entropy": b_anl.get("avg_token_entropy"),
             
@@ -125,11 +123,13 @@ def aggregate_eval_to_excel(
             "QLoRA_Clarity": q_clar,
             "QLoRA_Helpfulness": q_help,
             "QLoRA_Hallucination_Severity": qlora_hal_sev,
+            "QLoRA_Has_Hallucination": 1 if qlora_hal_sev > 0 else 0,
             
-            # Performa dari qlora.jsonl / qlora_analysis.jsonl (Fungsi Coalesce)
-            "QLoRA_Latency_Sec": q_raw.get("latency") or q_anl.get("latency"),
+            # Performa dengan Coalesce + fallback dari log judge jika file run kosong
+            "QLoRA_Latency_Sec": q_raw.get("latency") or q_anl.get("latency") or judge.get("judge_latency_sec_qlora"),
             "QLoRA_TTFT_Sec": q_raw.get("ttft_sec") or q_anl.get("ttft_sec"),
             "QLoRA_Throughput_TokSec": q_raw.get("throughput_tok_sec") or q_anl.get("throughput_tok_sec"),
+            "QLoRA_Token_Count": qlora_tokens,
             "QLoRA_Token_Confidence": q_anl.get("avg_token_confidence"),
             "QLoRA_Token_Entropy": q_anl.get("avg_token_entropy"),
         })
@@ -140,7 +140,7 @@ def aggregate_eval_to_excel(
 
     df_detail = pd.DataFrame(rows)
     
-    # 3. Menghitung Nilai Rata-rata (Summary) untuk Kebutuhan Tabel Bab 4 / Paper
+    # 3. Menghitung Nilai Rata-rata (Summary) menggunakan nama kolom yang sinkron
     summary_metrics = [
         ("Weighted Score (1-5)", "Base_Score_Weighted", "QLoRA_Score_Weighted"),
         ("Score Percentage (%)", "Base_Score_Percent", "QLoRA_Score_Percent"),
@@ -150,9 +150,11 @@ def aggregate_eval_to_excel(
         ("Clarity (1-5)", "Base_Clarity", "QLoRA_Clarity"),
         ("Helpfulness (1-5)", "Base_Helpfulness", "QLoRA_Helpfulness"),
         ("Hallucination Severity (0-3)", "Base_Hallucination_Severity", "QLoRA_Hallucination_Severity"),
+        ("Hallucination Rate (Binary %)", "Base_Has_Hallucination", "QLoRA_Has_Hallucination"),
         ("Inference Latency (sec)", "Base_Latency_Sec", "QLoRA_Latency_Sec"),
         ("Time to First Token / TTFT (sec)", "Base_TTFT_Sec", "QLoRA_TTFT_Sec"),
         ("Throughput (tokens/sec)", "Base_Throughput_TokSec", "QLoRA_Throughput_TokSec"),
+        ("Generated Tokens Length", "Base_Token_Count", "QLoRA_Token_Count"),
         ("Avg Token Confidence", "Base_Token_Confidence", "QLoRA_Token_Confidence"),
         ("Avg Token Entropy", "Base_Token_Entropy", "QLoRA_Token_Entropy")
     ]
@@ -167,7 +169,7 @@ def aggregate_eval_to_excel(
         
     df_summary = pd.DataFrame(summary_rows)
 
-    # 4. Ekspor ke berkas Excel dengan konfigurasi dua Sheet asli Anda
+    # 4. Ekspor ke berkas Excel dengan konfigurasi dua Sheet
     output_excel_path.parent.mkdir(parents=True, exist_ok=True)
     with pd.ExcelWriter(output_excel_path, engine="openpyxl") as writer:
         df_summary.to_excel(writer, sheet_name="Ringkasan_Paper", index=False)

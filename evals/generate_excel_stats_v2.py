@@ -38,7 +38,7 @@ def aggregate_eval_to_excel(
 
     rows = []
     
-    # 2. Master ID collection (Handles 50+ rows perfectly)
+    # 2. Master ID collection
     master_ids = set(judge_data.keys()).union(base_raw.keys()).union(base_analysis.keys())
     
     for record_id in sorted(master_ids):
@@ -49,29 +49,43 @@ def aggregate_eval_to_excel(
         q_anl = qlora_analysis.get(record_id, {})
         
         if "judge_error" in judge and len(judge) == 1:
-            continue # skip broken judge logs
+            continue 
             
         intent_raw = judge.get("intent") or b_raw.get("intent") or b_anl.get("intent") or "UNKNOWN"
         intent = intent_raw.upper()
         
-        # Extract Scores
-        base_metrics = judge.get("raw_average_scores", {}).get("base_model_1_to_5", {})
-        qlora_metrics = judge.get("raw_average_scores", {}).get("qlora_model_1_to_5", {})
-        base_pct = judge.get("normalized_metrics", {}).get("base_model_percentages", {})
-        qlora_pct = judge.get("normalized_metrics", {}).get("qlora_model_percentages", {})
+        # --- Metrics 1-5 Extraction ---
+        base_metrics = judge.get("base_metrics", {})
+        qlora_metrics = judge.get("qlora_metrics", {})
         
-        # Hallucination metrics
-        base_hal_sev = judge.get("individual_passes", {}).get("pass_1_base_first", {}).get("hallucination_analysis", {}).get("A", {}).get("severity", 0)
-        qlora_hal_sev = judge.get("individual_passes", {}).get("pass_1_base_first", {}).get("hallucination_analysis", {}).get("B", {}).get("severity", 0)
+        # --- FIX: Direct map to your real schema variables ---
+        b_score_raw = judge.get("base_score_raw")
+        q_score_raw = judge.get("qlora_score_raw")
+        b_score_pct = judge.get("base_score_percent")
+        q_score_pct = judge.get("qlora_score_percent")
         
-        # Token sizes (To evaluate context efficiency)
-        base_tokens = b_raw.get("response_tokens_count") or b_anl.get("response_tokens_count", 0)
-        qlora_tokens = q_raw.get("response_tokens_count") or q_anl.get("response_tokens_count", 0)
+        # Extract Hallucination objects safely
+        base_hal_obj = judge.get("base_hallucination", {}) if isinstance(judge.get("base_hallucination"), dict) else {}
+        qlora_hal_obj = judge.get("qlora_hallucination", {}) if isinstance(judge.get("qlora_hallucination"), dict) else {}
+        
+        base_hal_sev = base_hal_obj.get("severity", 0)
+        qlora_hal_sev = qlora_hal_obj.get("severity", 0)
+        
+        # Token sizes 
+        base_tokens = b_raw.get("response_tokens_count") or b_anl.get("response_tokens_count") or judge.get("judge_token_count_base", 0)
+        qlora_tokens = q_raw.get("response_tokens_count") or q_anl.get("response_tokens_count") or judge.get("judge_token_count_qlora", 0)
 
         rows.append({
             "ID": record_id,
             "Intent": intent,
             "Winner_Model": judge.get("winner_model", "TIE"),
+            
+            # --- GLOBAL OVERALL RAW & PCT SCORES ---
+            "Base_Overall_Raw": b_score_raw,
+            "QLoRA_Overall_Raw": q_score_raw,
+            "Base_Overall_Pct": b_score_pct,
+            "QLoRA_Overall_Pct": q_score_pct,
+            "Score_Delta": judge.get("score_delta"),
             
             # --- BASE MODEL METRICS ---
             "Base_Correctness": base_metrics.get("correctness"),
@@ -79,14 +93,9 @@ def aggregate_eval_to_excel(
             "Base_Completeness": base_metrics.get("completeness"),
             "Base_Clarity": base_metrics.get("clarity"),
             "Base_Helpfulness": base_metrics.get("helpfulness"),
-            "Base_Correctness_Pct": base_pct.get("correctness"),
-            "Base_Groundedness_Pct": base_pct.get("groundedness"),
-            "Base_Completeness_Pct": base_pct.get("completeness"),
-            "Base_Clarity_Pct": base_pct.get("clarity"),
-            "Base_Helpfulness_Pct": base_pct.get("helpfulness"),
             "Base_Hallucination_Severity": base_hal_sev,
             "Base_Has_Hallucination": 1 if base_hal_sev > 0 else 0,
-            "Base_Latency_Sec": b_raw.get("latency") or b_anl.get("latency"),
+            "Base_Latency_Sec": b_raw.get("latency") or b_anl.get("latency") or judge.get("judge_latency_sec_base"),
             "Base_TTFT_Sec": b_raw.get("ttft_sec") or b_anl.get("ttft_sec"),
             "Base_Throughput_TokSec": b_raw.get("throughput_tok_sec") or b_anl.get("throughput_tok_sec"),
             "Base_Token_Count": base_tokens,
@@ -99,14 +108,9 @@ def aggregate_eval_to_excel(
             "QLoRA_Completeness": qlora_metrics.get("completeness"),
             "QLoRA_Clarity": qlora_metrics.get("clarity"),
             "QLoRA_Helpfulness": qlora_metrics.get("helpfulness"),
-            "QLoRA_Correctness_Pct": qlora_pct.get("correctness"),
-            "QLoRA_Groundedness_Pct": qlora_pct.get("groundedness"),
-            "QLoRA_Completeness_Pct": qlora_pct.get("completeness"),
-            "QLoRA_Clarity_Pct": qlora_pct.get("clarity"),
-            "QLoRA_Helpfulness_Pct": qlora_pct.get("helpfulness"),
             "QLoRA_Hallucination_Severity": qlora_hal_sev,
             "QLoRA_Has_Hallucination": 1 if qlora_hal_sev > 0 else 0,
-            "QLoRA_Latency_Sec": q_raw.get("latency") or q_anl.get("latency"),
+            "QLoRA_Latency_Sec": q_raw.get("latency") or q_anl.get("latency") or judge.get("judge_latency_sec_qlora"),
             "QLoRA_TTFT_Sec": q_raw.get("ttft_sec") or q_anl.get("ttft_sec"),
             "QLoRA_Throughput_TokSec": q_raw.get("throughput_tok_sec") or q_anl.get("throughput_tok_sec"),
             "QLoRA_Token_Count": qlora_tokens,
@@ -120,18 +124,15 @@ def aggregate_eval_to_excel(
 
     df_detail = pd.DataFrame(rows)
     
-    # 3. Comprehensive Metric Definitions
+    # 3. Comprehensive Metric Definitions for the Averages
     summary_metrics = [
+        ("Overall Score (Raw Average)", "Base_Overall_Raw", "QLoRA_Overall_Raw"),
+        ("Overall Score (%)", "Base_Overall_Pct", "QLoRA_Overall_Pct"),
         ("Correctness (1-5)", "Base_Correctness", "QLoRA_Correctness"),
         ("Groundedness (1-5)", "Base_Groundedness", "QLoRA_Groundedness"),
         ("Completeness (1-5)", "Base_Completeness", "QLoRA_Completeness"),
         ("Clarity (1-5)", "Base_Clarity", "QLoRA_Clarity"),
         ("Helpfulness (1-5)", "Base_Helpfulness", "QLoRA_Helpfulness"),
-        ("Correctness (%)", "Base_Correctness_Pct", "QLoRA_Correctness_Pct"),
-        ("Groundedness (%)", "Base_Groundedness_Pct", "QLoRA_Groundedness_Pct"),
-        ("Completeness (%)", "Base_Completeness_Pct", "QLoRA_Completeness_Pct"),
-        ("Clarity (%)", "Base_Clarity_Pct", "QLoRA_Clarity_Pct"),
-        ("Helpfulness (%)", "Base_Helpfulness_Pct", "QLoRA_Helpfulness_Pct"),
         ("Hallucination Severity (0-3)", "Base_Hallucination_Severity", "QLoRA_Hallucination_Severity"),
         ("Hallucination Rate (Binary %)", "Base_Has_Hallucination", "QLoRA_Has_Hallucination"),
         ("Inference Latency (sec)", "Base_Latency_Sec", "QLoRA_Latency_Sec"),
@@ -145,10 +146,13 @@ def aggregate_eval_to_excel(
     # A. Global Macro Summary
     summary_rows = []
     for metric_label, base_col, qlora_col in summary_metrics:
+        b_mean = df_detail[base_col].mean() if base_col in df_detail.columns else None
+        q_mean = df_detail[qlora_col].mean() if qlora_col in df_detail.columns else None
+        
         summary_rows.append({
             "Metrik Evaluasi": metric_label,
-            "Base Model (Mean)": round(df_detail[base_col].mean(), 4) if base_col in df_detail.columns else None,
-            "QLoRA Model (Mean)": round(df_detail[qlora_col].mean(), 4) if qlora_col in df_detail.columns else None
+            "Base Model (Mean)": round(b_mean, 4) if pd.notna(b_mean) else None,
+            "QLoRA Model (Mean)": round(q_mean, 4) if pd.notna(q_mean) else None
         })
     df_summary = pd.DataFrame(summary_rows)
 
@@ -158,15 +162,18 @@ def aggregate_eval_to_excel(
     for intent_name in unique_intents:
         df_intent = df_detail[df_detail["Intent"] == intent_name]
         for metric_label, base_col, qlora_col in summary_metrics:
+            b_int_mean = df_intent[base_col].mean() if base_col in df_intent.columns else None
+            q_int_mean = df_intent[qlora_col].mean() if qlora_col in df_intent.columns else None
+            
             intent_rows.append({
                 "Intent": intent_name,
                 "Metrik Evaluasi": metric_label,
-                "Base Model (Mean)": round(df_intent[base_col].mean(), 4) if base_col in df_intent.columns else None,
-                "QLoRA Model (Mean)": round(df_intent[qlora_col].mean(), 4) if qlora_col in df_intent.columns else None
+                "Base Model (Mean)": round(b_int_mean, 4) if pd.notna(b_int_mean) else None,
+                "QLoRA Model (Mean)": round(q_int_mean, 4) if pd.notna(q_int_mean) else None
             })
     df_intent_summary = pd.DataFrame(intent_rows)
 
-    # C. Win-Rate Distribution Breakdown (FIXED HERE using Pandas native rounding)
+    # C. Win-Rate Distribution Breakdown
     win_counts = df_detail["Winner_Model"].value_counts(normalize=True) * 100
     df_win_rate = pd.DataFrame({
         "Model Verdict": win_counts.index,
