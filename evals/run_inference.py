@@ -83,7 +83,7 @@ async def main():
             tool_result = data["tool_result"]
 
             # Guard Clause: Retain context collection pipeline errors
-            if status == "ERROR" and (tool_result is None or tool_result == "" or context is None or context == ""):
+            if status == "ERROR" and not (context or tool_result):
                 data["response"] = None
                 data["inference_status"] = "SKIPPED_CONTEXT_ERROR"
                 data["latency"] = 0.0
