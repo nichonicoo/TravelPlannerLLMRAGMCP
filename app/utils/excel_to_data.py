@@ -4,7 +4,7 @@ from app.utils.file_converter import import_excel_to_json, json_to_jsonl
 
 
 def main():
-    dataset_name = "test_dataset"
+    dataset_name = "test_dataset_50"
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     # Paths

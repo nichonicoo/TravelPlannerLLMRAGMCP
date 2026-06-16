@@ -19,16 +19,23 @@ class WeatherLocationResolver:
         self._build_index()
 
     def _build_index(self):
-        # 1. Quantify administrative levels based on dots
+
+        # ==================================================
+        # COUNT ADMIN LEVELS
+        # ==================================================
         self.df["dot_count"] = (
             self.df["kode"]
             .astype(str)
             .str.count(r"\.")
         )
 
-        # 2. Extract Cities/Regencies (ADM2 has exactly 1 dot, e.g., '32.73')
-        city_df = self.df[self.df["dot_count"] == 1].copy()
-        
+        # ==================================================
+        # ADM2 (CITY / REGENCY)
+        # ==================================================
+        city_df = self.df[
+            self.df["dot_count"] == 1
+        ].copy()
+
         city_df["nama_lower"] = (
             city_df["nama"]
             .astype(str)
@@ -39,41 +46,77 @@ class WeatherLocationResolver:
             .str.strip()
         )
 
-        # Remove duplicate clean city names to avoid index clashing
-        city_df = city_df.drop_duplicates(subset=["nama_lower"])
-
-        # 3. Separate Villages/Kelurahan (ADM4 has exactly 3 dots, e.g., '32.73.01.1001')
-        village_df = self.df[self.df["dot_count"] == 3].copy()
+        city_df = city_df.drop_duplicates(
+            subset=["nama_lower"]
+        )
 
         # ==================================================
-        # MAP ADM2 CITIES TO A VALID ADM4 CHILD
+        # ADM4 (VILLAGE / KELURAHAN)
+        # ==================================================
+        village_df = self.df[
+            self.df["dot_count"] == 3
+        ].copy()
+
+        village_df["nama_lower"] = (
+            village_df["nama"]
+            .astype(str)
+            .str.lower()
+            .str.strip()
+        )
+
+        # ==================================================
+        # CITY -> DEFAULT ADM4 MAP
         # ==================================================
         self.CITY_NAME_INDEX = {}
 
         for _, row in city_df.iterrows():
-            city_code = row["kode"]          # e.g., "32.73"
-            city_name = row["nama_lower"]     # e.g., "bandung"
 
-            # Find all villages belonging to this city prefix
-            # e.g., looking for villages starting with "32.73."
+            city_code = row["kode"]
+            city_name = row["nama_lower"]
+
             child_villages = village_df[
-                village_df["kode"].str.startswith(f"{city_code}.")
+                village_df["kode"].str.startswith(
+                    f"{city_code}."
+                )
             ]
 
             if not child_villages.empty:
-                # Select the first available village/kelurahan as the default weather station
-                fallback_adm4 = child_villages.iloc[0]["kode"]
-                self.CITY_NAME_INDEX[city_name] = fallback_adm4
+
+                fallback_adm4 = (
+                    child_villages.iloc[0]["kode"]
+                )
+
+                self.CITY_NAME_INDEX[
+                    city_name
+                ] = fallback_adm4
+
             else:
-                # Edge case fallback: If your dataset lacks a child record for this city, 
-                # pad it manually so the API structural pattern holds up
-                self.CITY_NAME_INDEX[city_name] = f"{city_code}.01.1001"
+                self.CITY_NAME_INDEX[
+                    city_name
+                ] = f"{city_code}.01.1001"
 
-        self.ALL_CITY_NAMES = list(self.CITY_NAME_INDEX.keys())
+        self.ALL_CITY_NAMES = list(
+            self.CITY_NAME_INDEX.keys()
+        )
 
-        # ==========================================
-        # COMMON USER ALIASES / TYPO FIXES
-        # ==========================================
+        # ==================================================
+        # ADM4 NAME INDEX
+        # ==================================================
+        self.VILLAGE_NAME_INDEX = {}
+
+        for _, row in village_df.iterrows():
+
+            name = row["nama_lower"]
+            kode = row["kode"]
+
+            if name not in self.VILLAGE_NAME_INDEX:
+                self.VILLAGE_NAME_INDEX[name] = []
+
+            self.VILLAGE_NAME_INDEX[name].append(kode)
+
+        # ==================================================
+        # ALIASES
+        # ==================================================
         self.ALIASES = {
             "bdg": "bandung",
             "bndg": "bandung",
@@ -92,8 +135,11 @@ class WeatherLocationResolver:
 
         text = text.lower()
 
-        # remove symbols
-        text = re.sub(r"[^a-z\s]", " ", text)
+        text = re.sub(
+            r"[^a-z\s]",
+            " ",
+            text
+        )
 
         words = text.split()
 
@@ -130,9 +176,13 @@ class WeatherLocationResolver:
         return " ".join(filtered).strip()
 
     # ==================================================
-    # MAIN LOCATION RESOLVER
+    # MAIN RESOLVER
     # ==================================================
-    def getLocation(self, query, force: bool = False):
+    def getLocation(
+        self,
+        query,
+        force: bool = False
+    ):
 
         if isinstance(query, list):
             query = query[0] if query else ""
@@ -142,9 +192,9 @@ class WeatherLocationResolver:
 
         query = query.strip().lower()
 
-        # ------------------------------------------
+        # ==================================================
         # EXTRACT LOCATION
-        # ------------------------------------------
+        # ==================================================
         location = (
             query
             if force
@@ -159,30 +209,52 @@ class WeatherLocationResolver:
         if not location:
             return {"status": "NOT_FOUND"}
 
-        # ------------------------------------------
+        # ==================================================
         # APPLY ALIASES
-        # ------------------------------------------
-        location = self.ALIASES.get(location, location)
+        # ==================================================
+        location = self.ALIASES.get(
+            location,
+            location
+        )
 
-        print(f"[LocationResolver] normalized: '{location}'")
+        print(
+            f"[LocationResolver] normalized: "
+            f"'{location}'"
+        )
 
-        # ==========================================
-        # 1. EXACT MATCH
-        # ==========================================
-        if location in self.CITY_NAME_INDEX:
+        # ==================================================
+        # 0. EXACT ADM4/VILLAGE MATCH
+        # ==================================================
+        if location in self.VILLAGE_NAME_INDEX:
+
+            matches = self.VILLAGE_NAME_INDEX[
+                location
+            ]
+
+            # FOR EVALS:
+            # just use first match
             return {
                 "status": "FOUND",
-                "adm4": self.CITY_NAME_INDEX[location],
+                "adm4": matches[0],
                 "location_name": location.title(),
             }
 
-        # ==========================================
+        # ==================================================
+        # 1. EXACT CITY MATCH
+        # ==================================================
+        if location in self.CITY_NAME_INDEX:
+
+            return {
+                "status": "FOUND",
+                "adm4": self.CITY_NAME_INDEX[
+                    location
+                ],
+                "location_name": location.title(),
+            }
+
+        # ==================================================
         # 2. TOKEN MATCH
-        # ==========================================
-        #
-        # safer than:
-        # if location in name
-        #
+        # ==================================================
         token_matches = [
             name
             for name in self.ALL_CITY_NAMES
@@ -190,17 +262,20 @@ class WeatherLocationResolver:
         ]
 
         if len(token_matches) == 1:
+
             match = token_matches[0]
 
             return {
                 "status": "FOUND",
-                "adm4": self.CITY_NAME_INDEX[match],
+                "adm4": self.CITY_NAME_INDEX[
+                    match
+                ],
                 "location_name": match.title(),
             }
 
-        # ==========================================
+        # ==================================================
         # 3. PREFIX MATCH
-        # ==========================================
+        # ==================================================
         startswith_matches = [
             name
             for name in self.ALL_CITY_NAMES
@@ -208,22 +283,20 @@ class WeatherLocationResolver:
         ]
 
         if len(startswith_matches) == 1:
+
             match = startswith_matches[0]
 
             return {
                 "status": "FOUND",
-                "adm4": self.CITY_NAME_INDEX[match],
+                "adm4": self.CITY_NAME_INDEX[
+                    match
+                ],
                 "location_name": match.title(),
             }
 
-        # ==========================================
+        # ==================================================
         # 4. FUZZY MATCH
-        # ==========================================
-        #
-        # limit to short names only
-        # prevents:
-        # "padang bandung"
-        #
+        # ==================================================
         short_names = [
             name
             for name in self.ALL_CITY_NAMES
@@ -237,21 +310,28 @@ class WeatherLocationResolver:
             cutoff=0.75
         )
 
-        print("[LocationResolver] fuzzy matches:", matches)
+        print(
+            "[LocationResolver] fuzzy matches:",
+            matches
+        )
 
         if matches:
+
             match = matches[0]
 
             return {
                 "status": "FOUND",
-                "adm4": self.CITY_NAME_INDEX[match],
+                "adm4": self.CITY_NAME_INDEX[
+                    match
+                ],
                 "location_name": match.title(),
             }
 
-        # ==========================================
-        # 5. MULTIPLE POSSIBLE MATCHES
-        # ==========================================
+        # ==================================================
+        # 5. MULTIPLE CITY MATCHES
+        # ==================================================
         if len(token_matches) > 1:
+
             return {
                 "status": "AMBIGUOUS",
                 "candidates": token_matches[:5]

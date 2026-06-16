@@ -531,6 +531,12 @@ def search_flight_offers(
     except serpapi.TimeoutError as e:
         # Handle timeout
         print(f"The request timed out: {e}")
+
+    except Exception as e:
+      return {
+        "status": "ERROR",
+        "error": str(e)
+      }
     
     
 def parsing_offer(offer: dict) -> dict: 

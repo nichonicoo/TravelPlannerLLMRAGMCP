@@ -17,7 +17,10 @@ def build_mcp_params(intent: str, query: str, params: dict) -> dict:
     intent = intent.upper().strip()
 
     if intent == "WEATHER":
-        return {"query": query}
+        return {
+            "query": query,
+            "location": params.get("location")
+        }
 
     elif intent == "FLIGHT":
         return {
@@ -73,10 +76,10 @@ def build_mcp_context(intent: str, result: dict) -> str:
                 "airline": flight.get("airline"),
                 "travel_class": flight.get("travel_class"),
                 "legroom": flight.get("legroom"),
-                "extensions": flight["extensions", []],
+                "extensions": flight.get("extensions", []),
                 "flight_number": flight.get("flight_number"),
-                "departure": flight["departure_airport"]["time"],
-                "arrival": flight["arrival_airport"]["time"],
+                "departure": dep_airport.get("time"),
+                "arrival": arr_airport.get("time"),
                 "duration_minutes": flight.get("duration"),
                 "price_idr": offer.get("price"),
                 "departure_airport_name": dep_airport.get("name"),

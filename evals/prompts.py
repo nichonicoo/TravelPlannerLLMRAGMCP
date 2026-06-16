@@ -226,26 +226,30 @@ TOOL_RESULT:
 
 
 EVAL_PROMPT = """
-Anda adalah evaluator ilmiah senior untuk benchmark LLM berbasis Retrieval-Augmented Generation (RAG), Tool-Use, dan Question Answering.
+Anda adalah evaluator independen untuk benchmark Large Language Model (LLM).
 
-Tugas Anda adalah melakukan evaluasi komparatif yang ketat antara dua jawaban AI assistant.
+Tugas Anda adalah mengevaluasi kualitas SATU jawaban AI assistant secara objektif berdasarkan intent pengguna, context retrieval, dan tool result yang tersedia.
 
 ==================================================
-ATURAN PENTING
+PRINSIP EVALUASI
 ==================================================
 
-- Fokus utama adalah kualitas jawaban terhadap intent pengguna.
+- Fokus utama adalah kualitas jawaban terhadap kebutuhan pengguna.
 - Jangan memberi nilai lebih hanya karena jawaban lebih panjang.
-- Jawaban singkat yang akurat lebih baik daripada jawaban panjang berisi halusinasi.
-- Berikan penalti berat untuk informasi yang tidak didukung Context atau Tool Result.
-- Jangan mengarang informasi evaluasi.
-- Jika kedua jawaban setara, gunakan "TIE".
+- Jawaban singkat namun akurat lebih baik daripada jawaban panjang berisi halusinasi.
+- Penalti besar untuk informasi yang tidak didukung context atau tool result.
+- Jangan mengarang evaluasi.
+- Jangan menebak informasi yang tidak tersedia.
+- Evaluasi harus ketat, konsisten, dan objektif.
+- Fokus pada factual correctness dan groundedness.
+- Hindari bias gaya bahasa, markdown, verbosity, atau format kosmetik.
+- Output HARUS valid JSON.
 
 ==================================================
-RUBRIK PENILAIAN
+SKALA PENILAIAN
 ==================================================
 
-Gunakan skor integer 1 sampai 5.
+Gunakan integer 1 sampai 5.
 
 1 = sangat buruk
 2 = buruk
@@ -253,42 +257,78 @@ Gunakan skor integer 1 sampai 5.
 4 = baik
 5 = sangat baik
 
-DIMENSI:
+==================================================
+DIMENSI PENILAIAN
+==================================================
 
 1. correctness
+Menilai akurasi fakta dan ketepatan jawaban.
+
 5 = seluruh informasi akurat
 4 = hampir seluruhnya akurat
 3 = ada kesalahan kecil
 2 = beberapa kesalahan jelas
-1 = banyak kesalahan / halusinasi
+1 = banyak kesalahan atau halusinasi
+
+--------------------------------------------------
 
 2. groundedness
-5 = seluruh klaim didukung context/tool
-4 = hampir seluruhnya grounded
+Menilai apakah klaim didukung context/tool result.
+
+5 = seluruh klaim didukung
+4 = hampir seluruh klaim didukung
 3 = ada sedikit asumsi tambahan
 2 = beberapa klaim unsupported
 1 = banyak fabrikasi
 
+--------------------------------------------------
+
 3. completeness
+Menilai kelengkapan terhadap intent pengguna.
+
 5 = seluruh intent terpenuhi
 4 = hampir lengkap
 3 = sebagian besar terjawab
-2 = banyak informasi hilang
+2 = banyak informasi penting hilang
 1 = gagal menjawab
 
+--------------------------------------------------
+
 4. clarity
+Menilai struktur, keterbacaan, dan kejelasan.
+
 5 = sangat jelas dan profesional
 4 = jelas
 3 = cukup jelas
 2 = membingungkan
 1 = sulit dipahami
 
+--------------------------------------------------
+
 5. helpfulness
+Menilai kegunaan praktis jawaban.
+
 5 = sangat membantu dan actionable
 4 = membantu
 3 = cukup membantu
 2 = kurang membantu
 1 = tidak membantu
+
+==================================================
+DETEKSI HALUSINASI
+==================================================
+
+Tentukan apakah jawaban mengandung informasi yang:
+- tidak didukung context,
+- tidak didukung tool result,
+- bertentangan dengan data,
+- atau mengarang fakta.
+
+Severity:
+0 = tidak ada
+1 = ringan
+2 = sedang
+3 = berat
 
 ==================================================
 DATA EVALUASI
@@ -297,80 +337,69 @@ DATA EVALUASI
 [Intent]
 {intent}
 
+--------------------------------------------------
+
 [Question]
 {question}
+
+--------------------------------------------------
 
 [Context]
 {context}
 
+--------------------------------------------------
+
 [Tool Result]
 {tool_result}
 
-[Candidate A]
-{answer_a}
+--------------------------------------------------
 
-[Candidate B]
-{answer_b}
+[Assistant Answer]
+{answer}
 
 ==================================================
-INSTRUKSI EVALUASI
+INSTRUKSI
 ==================================================
 
-Lakukan langkah berikut:
+Lakukan evaluasi secara independen.
 
-1. Tentukan jawaban mana yang lebih baik secara keseluruhan.
-2. Evaluasi apakah ada halusinasi.
-3. Berikan skor integer konsisten dengan keputusan winner.
-4. Berikan reasoning singkat dan objektif.
+- Nilai seluruh dimensi secara objektif.
+- Gunakan skor integer 1-5.
+- Berikan reasoning singkat dan spesifik.
+- Jangan terlalu murah memberi skor 5.
+- Jangan menghukum jawaban hanya karena singkat jika tetap akurat.
+- Prioritaskan factual accuracy dibanding gaya bahasa.
 
 ==================================================
 FORMAT OUTPUT JSON
 ==================================================
 
-Output HARUS valid JSON.
-
 {{
-  "winner": "A",
-  "confidence": 0.82,
-
-  "hallucination_analysis": {{
-    "A": {{
-      "detected": false,
-      "severity": 0
-    }},
-    "B": {{
-      "detected": true,
-      "severity": 2
-    }}
-  }},
-
   "scores": {{
-    "A": {{
-      "correctness": 4,
-      "groundedness": 5,
-      "completeness": 4,
-      "clarity": 4,
-      "helpfulness": 5
-    }},
-    "B": {{
-      "correctness": 2,
-      "groundedness": 1,
-      "completeness": 3,
-      "clarity": 4,
-      "helpfulness": 2
-    }}
+    "correctness": 4,
+    "groundedness": 5,
+    "completeness": 4,
+    "clarity": 4,
+    "helpfulness": 5
   }},
 
-  "reasoning": "Jawaban A lebih akurat dan lebih grounded pada context."
+  "hallucination": {{
+    "detected": false,
+    "severity": 0
+  }},
+
+  "reasoning": "Jawaban akurat, grounded pada context, dan menjawab intent dengan baik."
 }}
 
 ==================================================
 ATURAN OUTPUT
 ==================================================
 
-- winner hanya boleh: "A", "B", atau "TIE"
-- confidence harus 0.0 sampai 1.0
-- severity harus integer 0 sampai 3
-- seluruh score harus integer 1 sampai 5
 - output HARUS valid JSON
+- seluruh score HARUS integer 1-5
+- severity HARUS integer 0-3
+- detected HARUS boolean
+- jangan menambahkan field lain
+- jangan menggunakan markdown
+- jangan menambahkan penjelasan di luar JSON
 """

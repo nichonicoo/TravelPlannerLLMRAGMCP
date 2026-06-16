@@ -13,6 +13,7 @@ class Settings:
     PROJECT_ROOT = Path(__file__).parent.parent.parent
     EVALS_DIR = PROJECT_ROOT / "evals"
 
+    LLM_GENERATION_MODE = os.getenv("LLM_GENERATION_MODE", "benchmark")
     LLM_PROVIDER = os.getenv("LLM_PROVIDER", "hf")
 
     # hf config
@@ -31,6 +32,7 @@ class Settings:
 
     # serpapi config
     SERP_API_KEY = os.getenv("SERP_API_KEY", "")
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
     @property
     def LMSTUDIO_TEMPERATURE(self) -> float:
