@@ -1,94 +1,40 @@
+import argparse
 import asyncio
 import json
 import time
-from datetime import datetime
 
-from google import genai
-from google.genai import types
-from google.genai.errors import APIError
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from langfuse import observe
 
-from app.core.settings import settings
-from evals.prompts import EVAL_PROMPT
+from app.core.settings import settings, langfuse
+from evals.judges import BaseJudge, JudgeFactory
 from evals.utils_scoring import (
-    MAX_CONTEXT_CHARS,
-    MAX_TOOL_CHARS,
     apply_hallucination_penalty,
     compute_weighted_score,
     determine_winner,
-    extract_json,
     is_success,
     load_jsonl,
     safe_text,
     scale_to_percentage,
-    truncate_text,
     validate_pair,
     validate_scores,
 )
 
-@retry(
-    stop=stop_after_attempt(5),  # Retry up to 5 times
-    wait=wait_exponential(multiplier=2, min=4, max=30),  # Wait 4s, 8s, 16s...
-    retry=retry_if_exception_type(APIError),
-    reraise=True  # If it still fails after 5 times, raise the error to the try-except block
-)
-async def run_single_judge_with_retry(client: genai.Client, model_name: str, prompt: str, config: types.GenerateContentConfig):
-    """Wraps the actual async API call for tenancy retry compatibility."""
-    return await client.aio.models.generate_content(
-        model=model_name,
-        contents=prompt,
-        config=config,
-    )
 
-async def run_single_judge(
-    client: genai.Client,
-    prompt: str,
-) -> dict:
-    """
-    Executes single independent evaluation using Gemma 4 31B 
-    hosted for free on Google AI Studio with automatic backoff.
-    """
-    config = types.GenerateContentConfig(
-        system_instruction="Anda adalah evaluator independen benchmark LLM. Output wajib valid JSON.",
-        response_mime_type="application/json",
-        temperature=0.1,
-    )
-
-    # Use the wrapped retry function
-    response = await run_single_judge_with_retry(
-        client=client,
-        model_name="gemma-4-31b-it",
-        prompt=prompt,
-        config=config
-    )
-
-    raw_response = response.text
-    cleaned = extract_json(raw_response)
-
-    return json.loads(cleaned)
-
-# FIX 1: Changed type hint from AsyncOpenAI to genai.Client
+@observe(name="judge-evaluation", as_type="generation")
 async def evaluate_single_response(
-    client: genai.Client,
+    judge: BaseJudge,
     sample: dict,
     answer: str,
-) -> dict:
-    """
-    Evaluates one answer independently.
-    """
-    # context = truncate_text(
-    #     safe_text(sample.get("context")),
-    #     MAX_CONTEXT_CHARS,
-    # )
-
-    # tool_result = truncate_text(
-    #     safe_text(sample.get("tool_result")),
-    #     MAX_TOOL_CHARS,
-    # )
+    model_run_type: str,  # "base" or "qlora"
+    judge_name: str
+) -> tuple[dict, float]:
+    """Evaluates one answer independently and logs the process to Langfuse."""
     context = safe_text(sample.get("context"))
     tool_result = safe_text(sample.get("tool_result"))
 
-    prompt = EVAL_PROMPT.format(
+    from evals.prompts import SYSTEM_EVAL_PROMPT, USER_EVAL_PROMPT
+
+    user_prompt = USER_EVAL_PROMPT.format(
         intent=sample["intent"],
         question=sample["question"],
         context=context,
@@ -96,24 +42,47 @@ async def evaluate_single_response(
         answer=answer,
     )
 
-    result = await run_single_judge(client, prompt)
+    start_time = time.perf_counter()
+
+    result = await judge.evaluate(
+        system_prompt=SYSTEM_EVAL_PROMPT,
+        user_prompt=user_prompt
+    )
     validate_scores(result["scores"])
-    return result
+
+    latency = time.perf_counter() - start_time
+
+    return result, latency
+
 
 async def main():
+    # Set up argument parsing to easily switch backends
+    parser = argparse.ArgumentParser(
+        description="Run LLM-as-a-Judge evaluation.")
+    parser.add_argument(
+        "--judge",
+        type=str,
+        default="gemini",
+        choices=["gemini", "deepseek"],
+        help="Specify which LLM judge platform to execute scoring."
+    )
+    args = parser.parse_args()
+
     RUN_A = settings.EVALS_DIR / "4_runs/base.jsonl"
     RUN_B = settings.EVALS_DIR / "4_runs/qlora.jsonl"
 
-    OUTPUT_FILE = settings.EVALS_DIR / "5_judge" / "judge_eval.jsonl"
+    # Dynamic output naming based on the judge type chosen
+    OUTPUT_FILE = settings.EVALS_DIR / "5_judge" / \
+        f"judge_eval_{args.judge}.jsonl"
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
 
     run_a = load_jsonl(RUN_A)
     run_b = load_jsonl(RUN_B)
 
-    if not settings.GEMINI_API_KEY:
-        raise ValueError("API Key is missing from your environment setup or .env file!")
-
-    client = genai.Client(api_key=settings.GEMINI_API_KEY)
+    # Instantiate the concrete implementation seamlessly using our Factory
+    print(
+        f"[*] Initializing factory engine for judge target: {args.judge.upper()}")
+    judge = JudgeFactory.create_judge(args.judge)
 
     all_record_ids = sorted(set(run_a.keys()) & set(run_b.keys()))
     print(f"[*] Total evaluations scheduled: {len(all_record_ids)}")
@@ -133,22 +102,22 @@ async def main():
 
             try:
                 # --- Evaluate Base Model ---
-                start_time_base = time.perf_counter()
-                base_eval = await evaluate_single_response(
-                    client,
-                    a,
-                    a["response"],
+                base_eval, judge_latency_base = await evaluate_single_response(
+                    judge=judge,
+                    sample=a,
+                    answer=a["response"],
+                    model_run_type="base",
+                    judge_name=args.judge
                 )
-                judge_latency_base = time.perf_counter() - start_time_base
 
                 # --- Evaluate QLoRA Model ---
-                start_time_qlora = time.perf_counter()
-                qlora_eval = await evaluate_single_response(
-                    client,
-                    a,
-                    b["response"],
+                qlora_eval, judge_latency_qlora = await evaluate_single_response(
+                    judge=judge,
+                    sample=a,
+                    answer=b["response"],
+                    model_run_type="qlora",
+                    judge_name=args.judge
                 )
-                judge_latency_qlora = time.perf_counter() - start_time_qlora
 
                 # --- Metric Parsing and Math ---
                 base_score = compute_weighted_score(base_eval["scores"])
@@ -193,6 +162,8 @@ async def main():
                 }
 
             outfile.write(json.dumps(result, ensure_ascii=False) + "\n")
+
+            # Rate limit backoff delay per row
             await asyncio.sleep(30)
 
     print(f"\n[+] Evaluation complete.\n[+] Output file: {OUTPUT_FILE}")
