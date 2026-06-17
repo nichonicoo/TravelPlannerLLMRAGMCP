@@ -33,6 +33,7 @@ class Settings:
     # serpapi config
     SERP_API_KEY = os.getenv("SERP_API_KEY", "")
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+    DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
 
     @property
     def LMSTUDIO_TEMPERATURE(self) -> float:

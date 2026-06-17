@@ -36,7 +36,10 @@ Run in paralel.
 
 # To run scoring
 1. Rename the results from run_inference of base to base.jsonl and qlora to qlora.jsonl
-2. uv run python -m evals.run_scoring
+# Run using DeepSeek V4 flash via DeepSeek API
+2. uv run python -m evals.run_scoring --judge deepseek
+# Run using Gemma 4 via Gemini API
+2. uv run python -m evals.run_scoring --judge gemini
 
 # To make it readable
 1. Rename the results from run_scoring to judge_eval.jsonl

@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from pydantic import BaseModel, Field
 
 MAX_CONTEXT_CHARS = 8000
 MAX_TOOL_CHARS = 4000
@@ -22,6 +23,21 @@ WEIGHTS = {
 
 TIE_THRESHOLD = 0.20
 
+class ScoresSchema(BaseModel):
+    correctness: int = Field(..., ge=1, le=5)
+    groundedness: int = Field(..., ge=1, le=5)
+    completeness: int = Field(..., ge=1, le=5)
+    clarity: int = Field(..., ge=1, le=5)
+    helpfulness: int = Field(..., ge=1, le=5)
+
+class HallucinationSchema(BaseModel):
+    detected: bool
+    severity: int = Field(..., ge=0, le=3)
+
+class EvaluationResponse(BaseModel):
+    scores: ScoresSchema
+    hallucination: HallucinationSchema
+    reasoning: str
 
 def load_jsonl(path: Path) -> dict:
     """
