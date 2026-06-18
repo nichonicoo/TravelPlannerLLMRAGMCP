@@ -33,6 +33,7 @@ def build_mcp_params(intent: str, query: str, params: dict) -> dict:
     elif intent == "HOTEL":
         return {
             "location": params.get("location"),
+            "hotels_query_params": params.get("hotels_query"), 
             "check_in_date": normalize_date(params.get("start_date")),
             "check_out_date": normalize_date(params.get("end_date")),
         }

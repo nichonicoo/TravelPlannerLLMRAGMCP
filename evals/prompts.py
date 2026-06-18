@@ -165,9 +165,9 @@ FORMAT OUTPUT (WAJIB)
 
 1. Pembuka:
 - Jika tersedia check_in_date & check_out_date:
-  "Berikut adalah beberapa rekomendasi hotel di Medan untuk masa inap [check_in_date] - [check_out_date] ([jumlah_malam] malam)"
+  "Berikut adalah beberapa rekomendasi hotel di [location] untuk masa inap [check_in_date] - [check_out_date] ([jumlah_malam] malam)"
 - Jika tidak tersedia:
-  "Berikut adalah beberapa rekomendasi hotel di Medan"
+  "Maaf, saya tidak menemukan hotel yang sesuai. Silakhan coba lagi"
 
 2. Jumlah hotel:
 "Hotel yang tersedia ada [jumlah hotel]:"
@@ -188,6 +188,7 @@ ATURAN TAMBAHAN
 ====================
 
 - Format angka ke Rupiah dengan pemisah ribuan titik (contoh: 1818630 → 1.818.630)
+- Jika jawaban harus berdasarkan TOOL_RESULT. 
 - Jumlah hotel harus sesuai dengan jumlah data pada TOOL_RESULT.
 - Jangan mengubah nilai angka
 - Tampilkan semua hotel tanpa terlewat
@@ -241,6 +242,20 @@ PRINSIP EVALUASI
 - Evaluasi harus ketat, konsisten, dan objektif (fokus pada factual correctness dan groundedness).
 - Hindari bias gaya bahasa, markdown, verbosity, atau format kosmetik.
 
+
+==================================================
+LOGIKA EVALUASI KHUSUS
+==================================================
+1. Konteks Geografis: 
+   - Jika jawaban menyebutkan lokasi di luar tool result (misal: Medan untuk pencarian Danau Toba), nilai Groundedness harus dikurangi, kecuali lokasi tersebut sangat relevan/berdekatan dan benar secara faktual.
+   - Jika jawaban tidak didukung data tool dan bukan pengetahuan umum yang valid, itu adalah halusinasi.
+
+2. Kurasi Data (Completeness):
+   - Jika tool memberikan 10 hasil namun LLM hanya memberikan 3-4, evaluasi berdasarkan "Kualitas Kurasi".
+   - Nilai 5: LLM melakukan kurasi yang relevan (memberikan opsi terbaik/terdekat sesuai preferensi pengguna).
+   - Nilai 3/ke bawah: LLM memotong data tanpa alasan yang jelas atau mengabaikan opsi yang sebenarnya lebih relevan.
+   - Jika pengguna minta "semua", maka LLM wajib menyajikan semua hasil.
+
 ==================================================
 SKALA PENILAIAN (Gunakan integer 1 sampai 5)
 ==================================================
@@ -289,7 +304,9 @@ INSTRUKSI OUTPUT
 - Wajib menggunakan Pydantic/JSON schema yang telah ditentukan.
 - Berikan reasoning singkat, spesifik, dan jujur pada field yang disediakan.
 - Jangan menggunakan markdown markdown block (seperti ```json) atau teks penjelasan lain di luar JSON.
-
+- Field 'reasoning' harus menjelaskan secara spesifik: 
+  a) Mengapa skor tersebut diberikan terkait kurasi data (jika jumlah hasil berbeda dari tool result).
+  b) Apakah ada informasi geografis di luar tool yang valid atau justru halusinasi.
 CONTOH OUTPUT:
 
 {

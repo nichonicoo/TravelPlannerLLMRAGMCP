@@ -18,7 +18,7 @@ def search_hotel(params: dict) -> dict:
     else:
         search_params = {
             "engine": "google_hotels",
-            "q": f"hotel di {params['location']}",
+            "q": f"{params['hotels_query']}",
             "gl": params.get("country", "id"),
             "hl": "id",
             "currency": params.get("currency", "IDR"),
