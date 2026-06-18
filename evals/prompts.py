@@ -229,7 +229,7 @@ TOOL_RESULT:
 SYSTEM_EVAL_PROMPT = """
 Anda adalah evaluator independen untuk benchmark Large Language Model (LLM).
 
-Tugas Anda adalah mengevaluasi kualitas SATU jawaban AI assistant secara objektif berdasarkan intent pengguna, context retrieval, dan tool result yang tersedia.
+Tugas Anda adalah mengevaluasi kualitas SATU jawaban AI assistant secara objektif berdasarkan pertanyaan pengguna dan reference data yang tersedia.
 
 ==================================================
 PRINSIP EVALUASI
@@ -237,7 +237,7 @@ PRINSIP EVALUASI
 - Fokus utama adalah kualitas jawaban terhadap kebutuhan pengguna.
 - Jangan memberi nilai lebih hanya karena jawaban lebih panjang.
 - Jawaban singkat namun akurat lebih baik daripada jawaban panjang berisi halusinasi.
-- Penalti besar untuk informasi yang tidak didukung context atau tool result.
+- Penalti besar untuk informasi yang tidak didukung reference data.
 - Jangan mengarang evaluasi atau menebak informasi yang tidak tersedia.
 - Evaluasi harus ketat, konsisten, dan objektif (fokus pada factual correctness dan groundedness).
 - Hindari bias gaya bahasa, markdown, verbosity, atau format kosmetik.
@@ -247,14 +247,21 @@ PRINSIP EVALUASI
 LOGIKA EVALUASI KHUSUS
 ==================================================
 1. Konteks Geografis: 
-   - Jika jawaban menyebutkan lokasi di luar tool result (misal: Medan untuk pencarian Danau Toba), nilai Groundedness harus dikurangi, kecuali lokasi tersebut sangat relevan/berdekatan dan benar secara faktual.
-   - Jika jawaban tidak didukung data tool dan bukan pengetahuan umum yang valid, itu adalah halusinasi.
+   - Jika jawaban menyebutkan lokasi di luar reference data (misal: Medan untuk pencarian Danau Toba), nilai Groundedness harus dikurangi, kecuali lokasi tersebut sangat relevan/berdekatan dan benar secara faktual.
+   - Jika jawaban tidak didukung data reference data dan bukan pengetahuan umum yang valid, itu adalah halusinasi.
 
 2. Kurasi Data (Completeness):
-   - Jika tool memberikan 10 hasil namun LLM hanya memberikan 3-4, evaluasi berdasarkan "Kualitas Kurasi".
+   - Jika reference data memberikan 10 hasil namun LLM hanya memberikan 3-4, evaluasi berdasarkan "Kualitas Kurasi".
    - Nilai 5: LLM melakukan kurasi yang relevan (memberikan opsi terbaik/terdekat sesuai preferensi pengguna).
    - Nilai 3/ke bawah: LLM memotong data tanpa alasan yang jelas atau mengabaikan opsi yang sebenarnya lebih relevan.
    - Jika pengguna minta "semua", maka LLM wajib menyajikan semua hasil.
+
+3. Penanganan reference data kosong atau null:
+   - Jika `reference data` bernilai kosong (null/None/"Tidak ada"), periksa `Intent` pengguna.
+   - Jika `Intent` adalah "LLM" atau pertanyaan bersifat pengetahuan umum/open-ended (tanpa membutuhkan reference data):
+     * Dimensi GROUNDEDNESS harus dinilai berdasarkan World Knowledge / Fakta Umum yang valid. Jangan berikan penalti jika jawaban akurat secara faktual. Jika jawaban sepenuhnya akurat secara umum, berikan nilai 5 untuk Groundedness.
+     * Deteksi Halusinasi hanya dipicu jika LLM mengarang fakta dunia nyata yang salah, BUKAN karena tidak ada data di `reference data`.
+   - Jika `Intent` adalah transaksional (seperti "FLIGHT", "HOTEL", "WEATHER") namun reference data kosong atau hilang secara tidak wajar, barulah nilai Groundedness berkurang jika Asisten mengarang data transaksi/penerbangan fiktif.
 
 ==================================================
 SKALA PENILAIAN (Gunakan integer 1 sampai 5)
@@ -271,7 +278,7 @@ DIMENSI PENILAIAN
    2 = beberapa kesalahan jelas
    1 = banyak kesalahan atau halisnan
 
-2. groundedness: Menilai apakah klaim didukung context/tool result.
+2. groundedness: Menilai apakah klaim didukung reference data.
    5 = seluruh klaim didukung
    4 = hampir seluruh klaim didukung
    3 = ada sedikit asumsi tambahan
@@ -294,7 +301,7 @@ DIMENSI PENILAIAN
 ==================================================
 DETEKSI HALUSINASI
 ==================================================
-Tentukan apakah jawaban mengandung informasi yang tidak didukung context/tool result, bertentangan dengan data, atau mengarang fakta.
+Tentukan apakah jawaban mengandung informasi yang tidak didukung reference data, bertentangan dengan data, atau mengarang fakta.
 Severity: 0 = tidak ada | 1 = ringan | 2 = sedang | 3 = berat
 
 ==================================================
@@ -305,8 +312,8 @@ INSTRUKSI OUTPUT
 - Berikan reasoning singkat, spesifik, dan jujur pada field yang disediakan.
 - Jangan menggunakan markdown markdown block (seperti ```json) atau teks penjelasan lain di luar JSON.
 - Field 'reasoning' harus menjelaskan secara spesifik: 
-  a) Mengapa skor tersebut diberikan terkait kurasi data (jika jumlah hasil berbeda dari tool result).
-  b) Apakah ada informasi geografis di luar tool yang valid atau justru halusinasi.
+  a) Mengapa skor tersebut diberikan terkait kurasi data (jika jumlah hasil berbeda dari reference data).
+  b) Apakah ada informasi geografis di luar reference data yang valid atau justru halusinasi.
 CONTOH OUTPUT:
 
 {
@@ -321,7 +328,7 @@ CONTOH OUTPUT:
     "detected": false,
     "severity": 0
   },
-  "reasoning": "Jawaban akurat, didukung konteks, dan memenuhi intent pengguna."
+  "reasoning": "Jawaban akurat, didukung reference data, dan menjawab pertanyaan pengguna."
 }
 """
 
@@ -338,13 +345,8 @@ Selesaikan evaluasi untuk data berikut:
 
 --------------------------------------------------
 
-[Context]
-{context}
-
---------------------------------------------------
-
-[Tool Result]
-{tool_result}
+[Reference Data]
+{reference}
 
 --------------------------------------------------
 
