@@ -33,16 +33,36 @@ Run in paralel.
 # To generate the results
 1. The code will take the latest file of the format of context_prepared_*.jsonl in evals/3_enriched
 2. uv run python -m evals.run_inference
+# Dont forget you need 4 runs for this run_inference:
+# - base model with benchmark generation mode
+# - qlora model with benchmark generation mode
+# - base model with analysis generation mode
+# - qlora model with analysis generation mode
+
+# Tips
+- You only need the base and qlora benchmark generation mode for scoring,
+  so you can run scoring parallel to analysis generation mode.
 
 # To run scoring
-1. Rename the results from run_inference of base to base.jsonl and qlora to qlora.jsonl
+1. Rename the results from run_inference in benchmark generation mode 
+   of base model to base.jsonl and
+   of qlora model to qlora.jsonl
 # Run using DeepSeek V4 flash via DeepSeek API
 2. uv run python -m evals.run_scoring --judge deepseek
 # Run using Gemma 4 via Gemini API
 2. uv run python -m evals.run_scoring --judge gemini
 
-# To make it readable
-1. Rename the results from run_scoring to judge_eval.jsonl
+# To run generate_excel_stats_v2.py
+1. Prepare 5 files to be read, which is
+    a. the base model with benchmark generation mode
+    b. the qlora model with benchmark generation mode
+    c. the base model with analysis generation mode
+    d. the qlora model with analysis generation mode
+    e. the judge evaluation result
+2. uv run python -m evals.generate_excel_stats_v2 (you can also rename the files and change input names in the code)
+
+# To make result of run_scoring readable
+1. Rename the results from run_scoring.py to judge_eval.jsonl
 2. uv run python -m evals.convert_jsonl_to_readable
 3. The code will generate files in evals/6_readable
 

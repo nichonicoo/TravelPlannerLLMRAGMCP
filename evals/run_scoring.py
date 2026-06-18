@@ -29,16 +29,34 @@ async def evaluate_single_response(
     judge_name: str
 ) -> tuple[dict, float]:
     """Evaluates one answer independently and logs the process to Langfuse."""
-    context = safe_text(sample.get("context"))
-    tool_result = safe_text(sample.get("tool_result"))
+
+    intent = sample.get("intent", "LLM")
+
+    raw_context = sample.get("context")
+    raw_tool = sample.get("tool_result")
+
+    reference_blocks = []
+
+    if sample.get("context") not in [None, "null", "", "None"]:
+        reference_blocks.append(f"=== KONTEKS ===\n{safe_text(raw_context)}")
+
+    if sample.get("tool_result") not in [None, "null", "", "None"]:
+        reference_blocks.append(f"=== HASIL EKSEKUSI TOOL ===\n{safe_text(raw_tool)}")
+
+    if not reference_blocks:
+        if sample.get("intent") == "LLM":
+            reference_data = "Tidak membutuhkan data eksternal (Intent: LLM). Evaluasi groundedness berdasarkan fakta umum dunia nyata."
+        else:
+            reference_data = "Tidak ada data pendukung yang tersedia dari sistem backend."
+    else:
+        reference_data = "\n\n".join(reference_blocks)
 
     from evals.prompts import SYSTEM_EVAL_PROMPT, USER_EVAL_PROMPT
 
     user_prompt = USER_EVAL_PROMPT.format(
-        intent=sample["intent"],
+        intent=intent,
         question=sample["question"],
-        context=context,
-        tool_result=tool_result,
+        reference=reference_data,
         answer=answer,
     )
 
